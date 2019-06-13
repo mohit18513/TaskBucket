@@ -6014,7 +6014,7 @@ var author$project$Main$update = F2(
 					elm$http$Http$get(
 						{
 							expect: elm$http$Http$expectString(author$project$Main$GotText),
-							url: 'https://sachinmengineering.tk20.com/ctuoprestapi/getStudentInformation/hello'
+							url: 'http://localhost:9999/task-bucket-api/hello1'
 						}));
 			case 'SwitchVisibility':
 				var visibility = msg.a;

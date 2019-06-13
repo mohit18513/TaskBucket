@@ -111,7 +111,7 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         AddTask taskText ->
-            --log taskText
+            --log "Value ==" taskText
             ({ model
                 | taskCount = model.taskCount + 1
                 , todo = ""
@@ -133,13 +133,16 @@ update msg model =
                 , taskList = List.filter (\task -> task.taskId /= id) model.taskList
             }, Cmd.none)
         MarkItCompleted id ->
+          -- let
+          --   log "Hello G==" id
+          -- in
             ({ model
                 | taskList = List.map (\task -> if task.taskId == id then
                                                   {task | isTaskCompleted = not task.isTaskCompleted}
                                                 else task
                                       ) model.taskList
             }, Http.get
-            { url = "https://sachinmengineering.tk20.com/ctuoprestapi/getStudentInformation/hello"
+            { url = "http://172.15.3.209:9999/task-bucket-api/hello"--"http://localhost:9999/task-bucket-api/hello1"
             , expect = Http.expectString GotText
             })
         SwitchVisibility visibility ->
