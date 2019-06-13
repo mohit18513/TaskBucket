@@ -7,7 +7,7 @@ import Debug exposing
   ( log
   , crash
   )
-
+--JMD
 
 main =
     beginnerProgram { model = model, view = view1, update = update1 }
