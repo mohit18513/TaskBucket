@@ -1,0 +1,120 @@
+<?xml version="1.0" ?>
+<project name="ctuoprestapi" default="devbuild">
+
+	<property name="ctuoprestapi.rootdir" value="${basedir}" />
+	<property name="runtime.rootdir" value="${ctuoprestapi.rootdir}/.." />
+	<property name="common.rootdir" value="${runtime.rootdir}/../common" />
+	<property name="thirdparty.rootdir" value="${common.rootdir}/thirdparty" />
+
+	<property name="src.dir" value="${ctuoprestapi.rootdir}/src" />
+	<property name="classes.dir" value="${ctuoprestapi.rootdir}/classes" />
+	<property name="runtime.deployment.jars.dir" value="${runtime.rootdir}/deployment/jars" />
+	<property name="common.deployment.jars.dir" value="${common.rootdir}/deployment/jars" />
+
+	<property name="thirdparty.jars.dir" value="${thirdparty.rootdir}/jars" />
+	<property name="thirdparty.ctuoprestapi.jars.dir" value="${thirdparty.jars.dir}/uoprestapi" />
+
+	<property name="ctuoprestapi.jar" value="${runtime.deployment.jars.dir}/ctuoprestapi.jar" />
+
+	<property name="build.debug" value="on" />
+
+	<property name="ctuoprestapi.templates.dir" value="${ctuoprestapi.rootdir}/templates" />
+	<property name="ctuoprestapi.prj.template" value="${ctuoprestapi.templates.dir}/prj.template" />
+	<property name="ctuoprestapi.prj.el" value="${src.dir}/prj.el" />
+	<property name="ctuoprestapi.project.template" value="${ctuoprestapi.templates.dir}/project.template" />
+	<property name="ctuoprestapi.project.file" value="${ctuoprestapi.rootdir}/.project" />
+	<property name="ctuoprestapi.classpath.template" value="${ctuoprestapi.templates.dir}/classpath.template" />
+	<property name="ctuoprestapi.classpath.file" value="${ctuoprestapi.rootdir}/.classpath" />
+	<property name="runtime.deployment.ctuoprestapi.dir" value="${runtime.rootdir}/deployment/ctuoprestapi" />
+
+	<path id="ctuoprestapi.rootdir.path">
+		<pathelement location="${ctuoprestapi.rootdir}" />
+	</path>
+
+	<path id="classes.dir.path">
+		<pathelement location="${classes.dir}" />
+	</path>
+
+	<path id="thirdparty.ctuoprestapi.jars.dir.path">
+		<pathelement location="${thirdparty.ctuoprestapi.jars.dir}" />
+	</path>
+
+	<path id="common.deployment.jars.dir.path">
+		<pathelement location="${common.deployment.jars.dir}" />
+	</path>
+
+	<path id="runtime.deployment.jars.dir.path">
+		<pathelement location="${runtime.deployment.jars.dir}" />
+	</path>
+
+	<path id="class.path">
+		<fileset dir="${thirdparty.ctuoprestapi.jars.dir}">
+			<include name="*.jar" />
+		</fileset>
+		<fileset dir="thirdparty.jars.dir">
+			<include name="postgresql-42.2.2.jar" />
+		</fileset>
+
+	</path>
+
+	<target name="init">
+		<mkdir dir="${classes.dir}" />
+		<mkdir dir="${runtime.deployment.jars.dir}" />
+		<mkdir dir="${runtime.deployment.ctuoprestapi.dir}" />
+	</target>
+
+	<target name="devbuild" depends="buildjar" />
+
+	<target name="buildjar" depends="compile">
+		<jar jarfile="${ctuoprestapi.jar}" manifest="${ctuoprestapi.templates.dir}/MANIFEST.MF" basedir="${classes.dir}" />
+	</target>
+
+	<target name="compile" depends="init">
+		<javac srcdir="${src.dir}" destdir="${classes.dir}" deprecation="on" debug="${build.debug}" verbose="on" failonerror="true">
+			<classpath refid="class.path" />
+		</javac>
+	</target>
+
+	<target name="clean">
+		<delete dir="${classes.dir}" />
+		<delete dir="${ctuoprestapi.jar}" />
+	</target>
+
+	<target name="createprj">
+		<pathconvert targetos="unix" property="ctuoprestapi.rootdir" refid="ctuoprestapi.rootdir.path" />
+		<pathconvert targetos="unix" property="classes.dir" refid="classes.dir.path" />
+		<pathconvert targetos="unix" property="thirdparty.ctuoprestapi.jars.dir" refid="thirdparty.ctuoprestapi.jars.dir.path" />
+		<pathconvert targetos="unix" property="common.deployment.jars.dir" refid="common.deployment.jars.dir.path" />
+		<pathconvert targetos="unix" property="runtime.deployment.jars.dir" refid="runtime.deployment.jars.dir.path" />
+
+
+		<copy file="${ctuoprestapi.prj.template}" tofile="${ctuoprestapi.prj.el}" overwrite="yes" />
+		<replace file="${ctuoprestapi.prj.el}">
+			<replacefilter token="[classes.dir]" value="${classes.dir}" />
+			<replacefilter token="[ctuoprestapi.rootdir]" value="${ctuoprestapi.rootdir}" />
+			<replacefilter token="[thirdparty.jars.dir]" value="${thirdparty.jars.dir}" />
+			<replacefilter token="[common.deployment.jars.dir]" value="${common.deployment.jars.dir}" />
+			<replacefilter token="[runtime.deployment.jars.dir]" value="${runtime.deployment.jars.dir}" />
+		</replace>
+	</target>
+
+	<target name="create_eclipse">
+		<pathconvert targetos="unix" property="ctuoprestapi.rootdir" refid="ctuoprestapi.rootdir.path" />
+		<pathconvert targetos="unix" property="classes.dir" refid="classes.dir.path" />
+		<pathconvert targetos="unix" property="thirdparty.ctuoprestapi.jars.dir" refid="thirdparty.ctuoprestapi.jars.dir.path" />
+		<pathconvert targetos="unix" property="common.deployment.jars.dir" refid="common.deployment.jars.dir.path" />
+		<pathconvert targetos="unix" property="runtime.deployment.jars.dir" refid="runtime.deployment.jars.dir.path" />
+
+		<copy file="${ctuoprestapi.project.template}" tofile="${ctuoprestapi.project.file}" overwrite="yes" />
+		<copy file="${ctuoprestapi.classpath.template}" tofile="${ctuoprestapi.classpath.file}" overwrite="yes" />
+		<replace file="${ctuoprestapi.classpath.file}">
+			<replacefilter token="[classes.dir]" value="${classes.dir}" />
+			<replacefilter token="[ctuoprestapi.rootdir]" value="${ctuoprestapi.rootdir}" />
+			<replacefilter token="[thirdparty.ctuoprestapi.jars.dir]" value="${thirdparty.ctuoprestapi.jars.dir}" />
+			<replacefilter token="[common.deployment.jars.dir]" value="${common.deployment.jars.dir}" />
+			<replacefilter token="[runtime.deployment.jars.dir]" value="${runtime.deployment.jars.dir}" />
+			<replacefilter token="[runtime.deployment.ctuoprestapi.dir]" value="${runtime.deployment.ctuoprestapi.dir}" />
+		</replace>
+	</target>
+
+</project>
