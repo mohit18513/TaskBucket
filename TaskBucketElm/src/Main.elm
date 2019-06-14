@@ -48,12 +48,12 @@ main =
 init : Maybe Model -> ( Model, Cmd Msg )
 init maybeModel =
   ( Maybe.withDefault emptyModel maybeModel
-  , getTasksRequest
+  , Cmd.batch [ getTasksRequest, getUsersRequest ]
   )
-
-routeInitialCmd : Cmd Msg
-routeInitialCmd  =
-     getTasksRequest
+--
+-- routeInitialCmd : Cmd Msg
+-- routeInitialCmd  =
+--      getTasksRequest
 
 
 onChange handler =
@@ -72,17 +72,17 @@ type alias Task =
     }
 
 type alias User =
-  { userId : Int
-  , firstName : String
-  , lastName : String
-  , userName : String
+  { id : Int
+  , name : String
+  , email : String
   }
+
 type alias Model =
     { taskCount : Int
     , newTask : Task
     , visibility : String
     , taskList : List Task
-    , users : List User
+    , userList : List User
     , renderView : String
     , user : User
     }
@@ -100,7 +100,7 @@ emptyModel =
       , newTask = emptyTask
       , visibility = "All"
       , taskList = []
-      , users = []
+      , userList = []
       , renderView = "Dashboard"
       , user = emptyUser
     }
@@ -118,10 +118,9 @@ emptyTask =
 
 emptyUser: User
 emptyUser =
-  { userId = 1
-  , firstName = "Mohit"
-  , lastName = "Jindal"
-  , userName = "mjindal"
+  { id = 1
+  , name = "Mohit"
+  , email = "mjindal"
   }
 
 
@@ -140,7 +139,8 @@ type Msg
     | SwitchVisibility String
     | TaskCreated (Result Http.Error Task)
     | GetTasks
-    | TasksFetched  (Result Http.Error (List Task))
+    | TasksFetched (Result Http.Error (List Task))
+    | UsersFetched (Result Http.Error (List User))
     | AddComment  Comment
     | CommentsFetched (Result Http.Error (List Comment))
     | CommentCreated  (Result Http.Error Comment)
@@ -229,6 +229,16 @@ update msg model =
             _ = Debug.log "Error task fecthed===" err
           in
             ( model, Cmd.none )
+
+        UsersFetched (Ok users) ->
+            ( {model | userList = users}, Cmd.none )
+
+        UsersFetched (Err err) ->
+          let
+            _ = Debug.log "Error users fecthed===" err
+          in
+            ( model, Cmd.none )
+
         AddComment  comment ->
            (model, createCommentRequest model.user emptyTask comment )
         CommentsFetched (Ok comment) ->
@@ -311,7 +321,9 @@ renderDashboard model =
         [ h1 [] [ text "Dashboard" ]
         , button [ onClick CreateTask ] [text "Create Task"]
         , h2 [] [ text "My Tasks" ]
-        , span [] [ fieldset []
+        --, h3 [] [ text "Filter by" ]
+        , span [] [ text "Filter by status"
+                    , fieldset []
                             [ radio "All" (SwitchVisibility "All") (if model.visibility == "All" then True else False)
                             , radio "Completed" (SwitchVisibility "Completed") (if model.visibility == "Completed" then True else False)
                             , radio "Outstanding" (SwitchVisibility "OutStanding") (if model.visibility == "OutStanding" then True else False)
@@ -373,64 +385,6 @@ renderCreateTaskView model =
       , button [ onClick AddTask ] [text "Create"]
       , button [ onClick CancelTask ] [text "Cancel"]
       ]
--- headerStyle =
---     style
---         [ ( "width", "100%" )
---         , ( "height", "40px" )
---         , ( "padding", "10px 0" )
---         , ( "font-size", "2em" )
---         , ( "text-align", "center" )
---         ]
---
---
--- myStyle =
---     style
---         [ ( "width", "100%" )
---         , ( "height", "40px" )
---         , ( "padding", "10px 0" )
---         , ( "font-size", "2em" )
---         , ( "text-align", "center" )
---         ]
---
---
--- buttonStyle =
---     style
---         [ ( "width", "30px" )
---         , ( "height", "30px" )
--- --        , ( "padding", "3px 3px 3px 3px" )
--- --        , ( "margin", "3px 3px 30px 10px" )
---         , ( "text-align", "center" )
---         , ( "cursor", "pointer")
---         , ( "display", "inline" )
---         ]
---
--- deleteStyle =
---     style
---         [("cursor", "pointer")
---         , ("position", "absolute")
---         , ("right","21px")
---         , ("height","21px")
---         , ("margin-right","10px")
---         ]
--- taskLiStyle =
---     style
---         [ ( "padding", "10px 20px 10px 20px" )
---         , ("position", "relative")
---         , ("width","600px")
---         , ("border","0px solid")
---         ]
--- titleStyle =
---     style
---         [ ("top", "7px")
---         , ("left","45px")
---         , ("display","block")
---         , ("overflow", "auto")
---         , ("font-size","1.2em")
---         , ("width","500px")
---         , ("height","25px")
---         , ("position","absolute")
---         , ("border","0px solid")
---         ]
 
 createTaskRequest : Task -> Cmd Msg
 createTaskRequest task =
@@ -484,7 +438,7 @@ taskListDecoder = Json.list taskDecoder
 
 defaultComment : User -> Task ->  Comment
 defaultComment  user task =
-  Comment 0 task.taskId  task.title user.userId
+  Comment 0 task.taskId  task.title user.id
 
 createCommentRequest : User -> Task -> Comment -> Cmd Msg
 createCommentRequest user task comment =
@@ -499,7 +453,7 @@ createCommentEncoder user task comment=
    JE.object
        [ ( "task_id", JE.int task.taskId )
        , ( "text", JE.string comment.text )
-       , ( "created_by", JE.int user.userId )
+       , ( "created_by", JE.int user.id )
        ]
 
 commentDecoder : Json.Decoder Comment
@@ -520,3 +474,21 @@ getCommentsRequest task =
 
 commentListDecoder : Json.Decoder (List Comment)
 commentListDecoder = Json.list commentDecoder
+
+userDecoder : Json.Decoder User
+userDecoder =
+   Json.succeed User
+       |> required "id" Json.int
+       |> required "name" Json.string
+       |> optional "email" Json.string ""
+
+
+getUsersRequest : Cmd Msg
+getUsersRequest =
+ Http.get
+     { url = "http://172.15.3.209:9999/task-bucket-api/users"
+     , expect = Http.expectJson UsersFetched userListDecoder
+     }
+
+userListDecoder : Json.Decoder (List User)
+userListDecoder = Json.list userDecoder
