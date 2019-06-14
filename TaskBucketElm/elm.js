@@ -6017,7 +6017,7 @@ var elm$http$Http$get = function (r) {
 var author$project$Main$getTasksRequest = elm$http$Http$get(
 	{
 		expect: A2(elm$http$Http$expectJson, author$project$Main$TasksFetched, author$project$Main$taskListDecoder),
-		url: 'http://172.15.3.11:9999/task-bucket-api/tasks'
+		url: 'http://172.15.3.209:9999/task-bucket-api/tasks'
 	});
 var author$project$Main$UsersFetched = function (a) {
 	return {$: 'UsersFetched', a: a};
@@ -6349,7 +6349,7 @@ var author$project$Main$createCommentRequest = F3(
 				body: elm$http$Http$jsonBody(
 					A3(author$project$Main$createCommentEncoder, user, task, comment)),
 				expect: A2(elm$http$Http$expectJson, author$project$Main$CommentCreated, author$project$Main$commentDecoder),
-				url: 'http://172.15.3.11:9999/task-bucket-api/tasks/' + (elm$core$String$fromInt(task.taskId) + '/comments')
+				url: 'http://172.15.3.209:9999/task-bucket-api/tasks/' + (elm$core$String$fromInt(task.taskId) + '/comments')
 			});
 	});
 var author$project$Main$TaskCreated = function (a) {
@@ -6387,7 +6387,7 @@ var author$project$Main$createTaskRequest = function (task) {
 			body: elm$http$Http$jsonBody(
 				author$project$Main$newTaskEncoder(task)),
 			expect: A2(elm$http$Http$expectJson, author$project$Main$TaskCreated, author$project$Main$taskDecoder),
-			url: 'http://172.15.3.11:9999/task-bucket-api/tasks'
+			url: 'http://172.15.3.209:9999/task-bucket-api/tasks'
 		});
 };
 var author$project$Main$CommentsFetched = function (a) {
@@ -6398,7 +6398,7 @@ var author$project$Main$getCommentsRequest = function (task) {
 	return elm$http$Http$get(
 		{
 			expect: A2(elm$http$Http$expectJson, author$project$Main$CommentsFetched, author$project$Main$commentListDecoder),
-			url: 'http://172.15.3.11:9999/task-bucket-api/tasks/' + (elm$core$String$fromInt(task.taskId) + '/comments')
+			url: 'http://172.15.3.209:9999/task-bucket-api/tasks/' + (elm$core$String$fromInt(task.taskId) + '/comments')
 		});
 };
 var elm$core$Basics$neq = _Utils_notEqual;
@@ -6651,13 +6651,13 @@ var author$project$Main$updateWithStorage = F2(
 					])));
 	});
 var author$project$Main$CreateTask = {$: 'CreateTask'};
-var author$project$Main$AddTask = {$: 'AddTask'};
-var author$project$Main$CancelTask = {$: 'CancelTask'};
-var author$project$Main$InputDescription = function (a) {
-	return {$: 'InputDescription', a: a};
-};
-var author$project$Main$InputTask = function (a) {
-	return {$: 'InputTask', a: a};
+var author$project$Main$AddComment = F2(
+	function (a, b) {
+		return {$: 'AddComment', a: a, b: b};
+	});
+var author$project$Main$CancelComment = {$: 'CancelComment'};
+var author$project$Main$InputCommentText = function (a) {
+	return {$: 'InputCommentText', a: a};
 };
 var elm$json$Json$Decode$map = _Json_map1;
 var elm$virtual_dom$VirtualDom$toHandlerInt = function (handler) {
@@ -6675,21 +6675,9 @@ var elm$virtual_dom$VirtualDom$toHandlerInt = function (handler) {
 var elm$html$Html$button = _VirtualDom_node('button');
 var elm$html$Html$div = _VirtualDom_node('div');
 var elm$html$Html$h1 = _VirtualDom_node('h1');
-var elm$html$Html$input = _VirtualDom_node('input');
-var elm$html$Html$label = _VirtualDom_node('label');
 var elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
 var elm$html$Html$text = elm$virtual_dom$VirtualDom$text;
 var elm$html$Html$textarea = _VirtualDom_node('textarea');
-var elm$html$Html$Attributes$stringProperty = F2(
-	function (key, string) {
-		return A2(
-			_VirtualDom_property,
-			key,
-			elm$json$Json$Encode$string(string));
-	});
-var elm$html$Html$Attributes$class = elm$html$Html$Attributes$stringProperty('className');
-var elm$html$Html$Attributes$placeholder = elm$html$Html$Attributes$stringProperty('placeholder');
-var elm$html$Html$Attributes$value = elm$html$Html$Attributes$stringProperty('value');
 var elm$virtual_dom$VirtualDom$Normal = function (a) {
 	return {$: 'Normal', a: a};
 };
@@ -6738,6 +6726,69 @@ var elm$html$Html$Events$onInput = function (tagger) {
 			elm$html$Html$Events$alwaysStop,
 			A2(elm$json$Json$Decode$map, tagger, elm$html$Html$Events$targetValue)));
 };
+var author$project$Main$renderCreateCommentView = function (model) {
+	return A2(
+		elm$html$Html$div,
+		_List_Nil,
+		_List_fromArray(
+			[
+				A2(
+				elm$html$Html$h1,
+				_List_Nil,
+				_List_fromArray(
+					[
+						elm$html$Html$text('Create Comments')
+					])),
+				A2(
+				elm$html$Html$textarea,
+				_List_fromArray(
+					[
+						elm$html$Html$Events$onInput(author$project$Main$InputCommentText)
+					]),
+				_List_Nil),
+				A2(
+				elm$html$Html$button,
+				_List_fromArray(
+					[
+						elm$html$Html$Events$onClick(
+						A2(author$project$Main$AddComment, model.currentComment, model.newTask))
+					]),
+				_List_fromArray(
+					[
+						elm$html$Html$text('Create')
+					])),
+				A2(
+				elm$html$Html$button,
+				_List_fromArray(
+					[
+						elm$html$Html$Events$onClick(author$project$Main$CancelComment)
+					]),
+				_List_fromArray(
+					[
+						elm$html$Html$text('Cancel')
+					]))
+			]));
+};
+var author$project$Main$AddTask = {$: 'AddTask'};
+var author$project$Main$CancelTask = {$: 'CancelTask'};
+var author$project$Main$InputDescription = function (a) {
+	return {$: 'InputDescription', a: a};
+};
+var author$project$Main$InputTask = function (a) {
+	return {$: 'InputTask', a: a};
+};
+var elm$html$Html$input = _VirtualDom_node('input');
+var elm$html$Html$label = _VirtualDom_node('label');
+var elm$html$Html$Attributes$stringProperty = F2(
+	function (key, string) {
+		return A2(
+			_VirtualDom_property,
+			key,
+			elm$json$Json$Encode$string(string));
+	});
+var elm$html$Html$Attributes$class = elm$html$Html$Attributes$stringProperty('className');
+var elm$html$Html$Attributes$placeholder = elm$html$Html$Attributes$stringProperty('placeholder');
+var elm$html$Html$Attributes$value = elm$html$Html$Attributes$stringProperty('value');
 var author$project$Main$renderCreateTaskView = function (model) {
 	return A2(
 		elm$html$Html$div,
@@ -6889,14 +6940,8 @@ var author$project$Main$radio = F3(
 					elm$html$Html$text(value)
 				]));
 	});
-var author$project$Main$CreateComment = function (a) {
-	return {$: 'CreateComment', a: a};
-};
 var author$project$Main$DeleteIt = function (a) {
 	return {$: 'DeleteIt', a: a};
-};
-var author$project$Main$FetchComments = function (a) {
-	return {$: 'FetchComments', a: a};
 };
 var author$project$Main$ShowTaskDetails = function (a) {
 	return {$: 'ShowTaskDetails', a: a};
@@ -6912,6 +6957,12 @@ var author$project$Main$getStatus = function (status) {
 		default:
 			return 'Cancelled';
 	}
+};
+var author$project$Main$CreateComment = function (a) {
+	return {$: 'CreateComment', a: a};
+};
+var author$project$Main$FetchComments = function (a) {
+	return {$: 'FetchComments', a: a};
 };
 var elm$core$List$head = function (list) {
 	if (list.b) {
@@ -7027,17 +7078,6 @@ var author$project$Main$renderTaskDetails = F2(
 						]),
 					_List_fromArray(
 						[
-							A2(
-							elm$html$Html$button,
-							_List_fromArray(
-								[
-									elm$html$Html$Events$onClick(
-									author$project$Main$DeleteIt(task.taskId))
-								]),
-							_List_fromArray(
-								[
-									elm$html$Html$text('Delete')
-								])),
 							A2(
 							elm$html$Html$button,
 							_List_fromArray(
@@ -7165,30 +7205,6 @@ var author$project$Main$renderList = F2(
 														_List_fromArray(
 															[
 																elm$html$Html$text('Delete')
-															])),
-														A2(
-														elm$html$Html$button,
-														_List_fromArray(
-															[
-																elm$html$Html$Attributes$class('button'),
-																elm$html$Html$Events$onClick(
-																author$project$Main$CreateComment(l))
-															]),
-														_List_fromArray(
-															[
-																elm$html$Html$text('Add Comment1')
-															])),
-														A2(
-														elm$html$Html$button,
-														_List_fromArray(
-															[
-																elm$html$Html$Attributes$class('button'),
-																elm$html$Html$Events$onClick(
-																author$project$Main$FetchComments(l))
-															]),
-														_List_fromArray(
-															[
-																elm$html$Html$text('Show Comments')
 															]))
 													])),
 												l.showDetails ? A2(author$project$Main$renderTaskDetails, l, model) : elm$html$Html$text('')
@@ -7265,10 +7281,13 @@ var elm$html$Html$Attributes$classList = function (classes) {
 var author$project$Main$view = function (model) {
 	var openSidePanel = function () {
 		var _n0 = model.renderView;
-		if (_n0 === 'CreateTask') {
-			return true;
-		} else {
-			return false;
+		switch (_n0) {
+			case 'CreateTask':
+				return true;
+			case 'CreateComment':
+				return true;
+			default:
+				return false;
 		}
 	}();
 	return A2(
@@ -7314,7 +7333,7 @@ var author$project$Main$view = function (model) {
 				_List_fromArray(
 					[
 						author$project$Main$renderDashboard(model),
-						A2(
+						(model.renderView === 'CreateTask') ? A2(
 						elm$html$Html$div,
 						_List_fromArray(
 							[
@@ -7329,7 +7348,23 @@ var author$project$Main$view = function (model) {
 						_List_fromArray(
 							[
 								author$project$Main$renderCreateTaskView(model)
-							]))
+							])) : elm$html$Html$text(''),
+						(model.renderView === 'CreateComment') ? A2(
+						elm$html$Html$div,
+						_List_fromArray(
+							[
+								elm$html$Html$Attributes$classList(
+								_List_fromArray(
+									[
+										_Utils_Tuple2('mini-panel', true),
+										_Utils_Tuple2('show', openSidePanel),
+										_Utils_Tuple2('hide', !openSidePanel)
+									]))
+							]),
+						_List_fromArray(
+							[
+								author$project$Main$renderCreateCommentView(model)
+							])) : elm$html$Html$text('')
 					]))
 			]));
 };

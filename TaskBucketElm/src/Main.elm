@@ -325,15 +325,16 @@ renderList lst model =
                             , label [] [text (getStatus l.status)]
                             , label [] [text "  Commented On: "]
                             , label [] [text l.commentedOn]]
-                            , div[class "button-collection"][button [ onClick (DeleteIt l.taskId)] [text "Delete"]
+                            , div[class "button-collection"][button [ onClick (DeleteIt l.taskId)] [text "Delete"]]
                             --, button [ class "button", onClick (AddComment (defaultComment model.user l))][text "Add Comment"]]
-                            , button [ class "button", onClick (CreateComment l) ][text "Add Comment"]
-                            , button [ class "button", onClick (FetchComments  l)][text "Show Comments"]]
+                            --, button [ class "button", onClick (CreateComment l) ][text "Add Comment"]
+                            --, button [ class "button", onClick (FetchComments  l)][text "Show Comments"]]
                             , if l.showDetails then renderTaskDetails l model else text ""
                             ]
                             -- ,div[class "body"][
                             --   text "body here"
                             -- ]
+
 
                            ]
 
@@ -357,9 +358,9 @@ renderTaskDetails task model =
             , label [] [text task.createdOn]
             ]
            , a [onClick (ShowTaskDetails task)] [text task.title]
-           , div[class "button-collection"][button [ onClick (DeleteIt task.taskId)] [text "Delete"]
+           --, div[class "button-collection"][button [ onClick (DeleteIt task.taskId)] [text "Delete"]
            --, button [ class "button", onClick (AddComment (defaultComment model.user l))][text "Add Comment"]]
-           , button [ class "button", onClick (CreateComment task) ][text "Add Comment"]
+           , div[class "button-collection"][button [ class "button", onClick (CreateComment task) ][text "Add Comment"]
            , button [ class "button", onClick (FetchComments task)][text "Show Comments"]]
            ]
            -- ,div[class "body"][
@@ -387,6 +388,8 @@ view model =
       case model.renderView of
         "CreateTask" ->
           True
+        "CreateComment" ->
+          True
         _ ->
           False
   in
@@ -399,7 +402,8 @@ view model =
       [
 
       renderDashboard model
-      , div [ classList [( "mini-panel", True), ("show", openSidePanel),  ("hide", not openSidePanel)] ][ renderCreateTaskView model ]
+      , if model.renderView == "CreateTask" then div [ classList [( "mini-panel", True), ("show", openSidePanel),  ("hide", not openSidePanel)] ][ renderCreateTaskView model ] else text ""
+      , if model.renderView == "CreateComment" then div [ classList [( "mini-panel", True), ("show", openSidePanel),  ("hide", not openSidePanel)] ][ renderCreateCommentView model ] else text ""
       ]
   ]
 
@@ -454,7 +458,7 @@ renderCreateTaskView model =
 createTaskRequest : Task -> Cmd Msg
 createTaskRequest task =
     Http.post
-        { url = "http://172.15.3.11:9999/task-bucket-api/tasks"
+        { url = "http://172.15.3.209:9999/task-bucket-api/tasks"
         , body = Http.jsonBody (newTaskEncoder task)
         , expect = Http.expectJson TaskCreated taskDecoder
         --, timeout = Nothing
@@ -463,7 +467,7 @@ createTaskRequest task =
 getTasksRequest : Cmd Msg
 getTasksRequest =
   Http.get
-      { url = "http://172.15.3.11:9999/task-bucket-api/tasks"
+      { url = "http://172.15.3.209:9999/task-bucket-api/tasks"
       , expect = Http.expectJson TasksFetched taskListDecoder
       --, timeout = Nothing
       --, withCredentials = False
@@ -513,7 +517,7 @@ defaultComment  user task =
 createCommentRequest : User -> Task -> Comment -> Cmd Msg
 createCommentRequest user task comment =
    Http.post
-       { url = "http://172.15.3.11:9999/task-bucket-api/tasks/"++ String.fromInt(task.taskId) ++"/comments"
+       { url = "http://172.15.3.209:9999/task-bucket-api/tasks/"++ String.fromInt(task.taskId) ++"/comments"
        , body = Http.jsonBody (createCommentEncoder user task comment)
        , expect = Http.expectJson CommentCreated commentDecoder
        }
@@ -539,7 +543,7 @@ getCommentsRequest : Task -> Cmd Msg
 getCommentsRequest task =
  Http.get
      {
-     url = "http://172.15.3.11:9999/task-bucket-api/tasks/" ++ String.fromInt(task.taskId) ++"/comments"
+     url = "http://172.15.3.209:9999/task-bucket-api/tasks/" ++ String.fromInt(task.taskId) ++"/comments"
      , expect = Http.expectJson CommentsFetched commentListDecoder
      }
 
