@@ -10,6 +10,7 @@ import java.util.Set;
 import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,7 +32,8 @@ public class UserResource {
 	@Autowired
 	DataSource dataSource = null;
 
-	@PostMapping("")
+	@CrossOrigin(origins = "*")
+	@GetMapping("")
 	public Set<User> getStudentInformation(@RequestParam String user_id) {
 
 		ResultSet userCursor = null;
@@ -67,11 +69,6 @@ public class UserResource {
 			}
 		}
 		return users;
-	}
-
-	@GetMapping(path = "/hello")
-	public String handleAllGetRequests() throws SQLException {
-		return "hello";
 	}
 
 }
