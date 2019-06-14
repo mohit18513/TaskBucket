@@ -48,12 +48,12 @@ main =
 init : Maybe Model -> ( Model, Cmd Msg )
 init maybeModel =
   ( Maybe.withDefault emptyModel maybeModel
-  , getTasksRequest
+  , Cmd.batch [ getTasksRequest, getUsersRequest ]
   )
-
-routeInitialCmd : Cmd Msg
-routeInitialCmd  =
-     getTasksRequest
+--
+-- routeInitialCmd : Cmd Msg
+-- routeInitialCmd  =
+--      getTasksRequest
 
 
 onChange handler =
@@ -73,17 +73,17 @@ type alias Task =
     }
 
 type alias User =
-  { userId : Int
-  , firstName : String
-  , lastName : String
-  , userName : String
+  { id : Int
+  , name : String
+  , email : String
   }
+
 type alias Model =
     { taskCount : Int
     , newTask : Task
     , visibility : String
     , taskList : List Task
-    , users : List User
+    , userList : List User
     , renderView : String
     , user : User
     , currentComment : Comment
@@ -103,7 +103,7 @@ emptyModel =
       , newTask = emptyTask
       , visibility = "All"
       , taskList = []
-      , users = []
+      , userList = []
       , renderView = "Dashboard"
       , user = emptyUser
       , currentComment = defaultComment emptyUser emptyTask
@@ -124,10 +124,9 @@ emptyTask =
 
 emptyUser: User
 emptyUser =
-  { userId = 1
-  , firstName = "Mohit"
-  , lastName = "Jindal"
-  , userName = "mjindal"
+  { id = 1
+  , name = "Mohit"
+  , email = "mjindal"
   }
 
 
@@ -154,6 +153,7 @@ type Msg
     | CommentsFetched (Result Http.Error (List Comment))
     | CommentCreated  (Result Http.Error Comment)
     | CreateComment Task
+    | UsersFetched (Result Http.Error (List User))
 
 
 --type Visibility1 = All | OutStanding | Completed
@@ -279,8 +279,14 @@ update msg model =
         CancelComment ->
            ({model | renderView = "Dashboard", currentComment = defaultComment emptyUser emptyTask}, Cmd.none)
 
+        UsersFetched (Ok users) ->
+            ( {model | userList = users}, Cmd.none )
 
-
+        UsersFetched (Err err) ->
+          let
+            _ = Debug.log "Error users fecthed===" err
+          in
+            ( model, Cmd.none )
 
 
 
@@ -450,7 +456,7 @@ taskListDecoder = Json.list taskDecoder
 
 defaultComment : User -> Task ->  Comment
 defaultComment  user task =
-  Comment 0 task.taskId  task.title user.userId
+  Comment 0 task.taskId  task.title user.id
 
 createCommentRequest : User -> Task -> Comment -> Cmd Msg
 createCommentRequest user task comment =
@@ -465,7 +471,7 @@ createCommentEncoder user task comment=
    JE.object
        [ ( "task_id", JE.int task.taskId )
        , ( "text", JE.string comment.text )
-       , ( "created_by", JE.int user.userId )
+       , ( "created_by", JE.int user.id )
        ]
 
 commentDecoder : Json.Decoder Comment
@@ -498,3 +504,21 @@ renderCreateCommentView model =
      , button [ onClick (AddComment model.currentComment model.newTask)] [text "Create"]
      , button [ onClick CancelComment ] [text "Cancel"]
      ]
+     
+userDecoder : Json.Decoder User
+userDecoder =
+   Json.succeed User
+       |> required "id" Json.int
+       |> required "name" Json.string
+       |> optional "email" Json.string ""
+
+
+getUsersRequest : Cmd Msg
+getUsersRequest =
+ Http.get
+     { url = "http://172.15.3.209:9999/task-bucket-api/users"
+     , expect = Http.expectJson UsersFetched userListDecoder
+     }
+
+userListDecoder : Json.Decoder (List User)
+userListDecoder = Json.list userDecoder
