@@ -67,6 +67,7 @@ type alias Task =
     , created_by : Int
     , ownerId : Int
     , status : Int
+    , due_date : String
     , isTaskDeleted : Bool
     , isTaskCompleted : Bool
     }
@@ -85,6 +86,8 @@ type alias Model =
     , users : List User
     , renderView : String
     , user : User
+    , currentComment : Comment
+    , commentList : List Task
     }
 type alias Comment =
     { commentId : Int
@@ -103,15 +106,18 @@ emptyModel =
       , users = []
       , renderView = "Dashboard"
       , user = emptyUser
+      , currentComment = defaultComment emptyUser emptyTask
+      , commentList =[]
     }
 emptyTask : Task
 emptyTask =
-    { taskId = 0
+    { taskId = 1
     , title = ""
     , description = ""
     , created_by = 1
     , ownerId = 1
     , status = 0
+    , due_date = "2019-06-10"
     , isTaskDeleted = False
     , isTaskCompleted = False
     }
@@ -141,9 +147,14 @@ type Msg
     | TaskCreated (Result Http.Error Task)
     | GetTasks
     | TasksFetched  (Result Http.Error (List Task))
-    | AddComment  Comment
+    | InputCommentText String
+    | CancelComment
+    | AddComment  Comment Task
+    | FetchComments Task
     | CommentsFetched (Result Http.Error (List Comment))
     | CommentCreated  (Result Http.Error Comment)
+    | CreateComment Task
+
 
 --type Visibility1 = All | OutStanding | Completed
 port setStorage : Model -> Cmd msg
@@ -170,7 +181,10 @@ update msg model =
             --(model, createTaskRequest (Task 1 title "Hello Description" 1 1 0 False False) )
             (model, createTaskRequest model.newTask )
         CreateTask ->
-          ({model | renderView = "CreateTask"}, Cmd.none )
+          let
+            _ = Debug.log "newTask==" model.newTask
+          in
+            ({model | renderView = "CreateTask", newTask = emptyTask}, Cmd.none )
         InputTask title ->
           let
             task = model.newTask
@@ -211,7 +225,7 @@ update msg model =
             }, Cmd.none)
 
         TaskCreated (Ok task) ->
-            ( {model | taskList = [task] ++ model.taskList, renderView = "Dashboard"}, Cmd.none )
+            ( {model | taskList = [task] ++ model.taskList, renderView = "Dashboard", newTask = emptyTask}, Cmd.none )
 
         TaskCreated (Err err) ->
           let
@@ -229,24 +243,42 @@ update msg model =
             _ = Debug.log "Error task fecthed===" err
           in
             ( model, Cmd.none )
-        AddComment  comment ->
-           (model, createCommentRequest model.user emptyTask comment )
-        CommentsFetched (Ok comment) ->
-            ( model, Cmd.none )
+        AddComment  comment task->
+          (model, createCommentRequest model.user task comment )
+
+        FetchComments task->
+           (model, getCommentsRequest task)
+
+        CommentsFetched (Ok comments) ->
+           ( model, Cmd.none )
 
         CommentsFetched (Err err) ->
           let
             _ = Debug.log "Error CommentsFetched fecthed===" err
           in
             ( model, Cmd.none )
+        CreateComment task->
+         ({model | renderView = "CreateComment", newTask = task}, Cmd.none )
+
         CommentCreated (Ok comment) ->
-            ( model, Cmd.none )
+            ( {model | renderView ="Dashboard" }, Cmd.none )
 
         CommentCreated (Err err) ->
           let
             _ = Debug.log "Error CommentCreated fecthed===" err
           in
             ( model, Cmd.none )
+
+        InputCommentText description ->
+         let
+           comment = model.currentComment
+           newComment = {comment | text = description}
+         in
+           ({model | currentComment = newComment}, Cmd.none)
+
+        CancelComment ->
+           ({model | renderView = "Dashboard", currentComment = defaultComment emptyUser emptyTask}, Cmd.none)
+
 
 
 
@@ -262,34 +294,28 @@ keep visibility taskList =
       _ ->
         taskList
 
-{- ClearThis y ->
-   {model
-     | taskList = spliceList model.taskList y}
--}
---renderList : List Task -> Html Msg
-
-
 renderList lst model =
     ol []
         (List.map
             (\l ->
                 li [  ]
-                   [ div []
-                           [ input [ type_ "checkbox"
+                   [ div [class "list-item"]
+                           [ div[class "list-header"][input [ type_ "checkbox"
                                    , onClick (MarkItCompleted l.taskId)
                                    , checked l.isTaskCompleted
                                    ]
                                    []
                             , label [] [text l.title]
-                            , button [ onClick (DeleteIt l.taskId)] [text "Delete"]
-                            , button [ class "button", onClick (AddComment (defaultComment model.user l))][text "Add Comment"]
+                            , div[class "button-collection"][button [ onClick (DeleteIt l.taskId)] [text "Delete"]
+                            --, button [ class "button", onClick (AddComment (defaultComment model.user l))][text "Add Comment"]]
+                            , button [ class "button", onClick (CreateComment l) ][text "Add Comment"]
+                            , button [ class "button", onClick (FetchComments  l)][text "Show Comments"]]
+                            ]
+                            -- ,div[class "body"][
+                            --   text "body here"
+                            -- ]
+
                            ]
-                    -- , img [src "http://www.freeiconspng.com/uploads/remove-icon-png-26.png"
-                    --       , alt "Delete/Remove"
-                    --       --, deleteStyle
-                    --       , onClick (DeleteIt l.taskId)
-                    --       ]
-                    --       [text "Delete"]
 
                     ]
             )
@@ -301,33 +327,39 @@ renderList lst model =
 
 view : Model -> Html Msg
 view model =
-  case model.renderView of
-    "CreateTask" -> renderCreateTaskView model
-    _ -> renderDashboard model
+  let
+    openSidePanel=
+      case model.renderView of
+        "CreateTask" ->
+          True
+        _ ->
+          False
+  in
+  div[][
+    div[class "header"][
+    h1 [class "headerStyle"] [ text "Dashboard" ]
+    , button [ onClick CreateTask ] [text "Create Task"]
+    ]
+    ,div [class "panel"]
+      [
+
+      renderDashboard model
+      , div [ classList [( "mini-panel", True), ("show", openSidePanel),  ("hide", not openSidePanel)] ][ renderCreateTaskView model ]
+      ]
+  ]
+
 
 renderDashboard: Model -> Html Msg
 renderDashboard model =
-    div []
-        [ h1 [] [ text "Dashboard" ]
-        , button [ onClick CreateTask ] [text "Create Task"]
-        , h2 [] [ text "My Tasks" ]
-        , span [] [ fieldset []
-                            [ radio "All" (SwitchVisibility "All") (if model.visibility == "All" then True else False)
-                            , radio "Completed" (SwitchVisibility "Completed") (if model.visibility == "Completed" then True else False)
-                            , radio "Outstanding" (SwitchVisibility "OutStanding") (if model.visibility == "OutStanding" then True else False)
-                            ]
-                    -- , button [ --buttonStyle
-                    --           onClick ClearList
-                    --          , src "https://cdn.shopify.com/s/files/1/0556/7973/t/30/assets/free-returns-i.png?3729309556114054824"
-                    --          ]
-                    --          [ text "Reset Task List" ]
+    div [class "main-panel"]
+        [
+        h2 [class "headerStyle"] [ text "My Tasks" ]
+        , div [class "filter"] [  radio "All" (SwitchVisibility "All") (if model.visibility == "All" then True else False)
+                    , radio "Completed" (SwitchVisibility "Completed") (if model.visibility == "Completed" then True else False)
+                    , radio "Outstanding" (SwitchVisibility "OutStanding") (if model.visibility == "OutStanding" then True else False)
+
                   ]
-        -- , input [  placeholder "Want to track a task? Add here!"
-        --         , onChange AddTask
-        --         , value content.todo
-        --         ]
-        --         []
-        --, div [ myStyle ] [ text "Total no. of tasks : ", text (toString content.taskCount) ]
+
         , renderList (keep model.visibility model.taskList) model
         ]
 
@@ -349,88 +381,20 @@ renderCreateTaskView: Model -> Html Msg
 renderCreateTaskView model =
   div []
       [ h1 [] [ text "Create New Task" ]
-      -- , span [] [ fieldset []
-      --                     [ radio "All" (SwitchVisibility "All") (if content.visibility == "All" then True else False)
-      --                     , radio "Completed" (SwitchVisibility "Completed") (if content.visibility == "Completed" then True else False)
-      --                     , radio "Outstanding" (SwitchVisibility "OutStanding") (if content.visibility == "OutStanding" then True else False)
-      --                     ]
-      --             -- , button [ --buttonStyle
-      --             --           onClick ClearList
-      --             --          , src "https://cdn.shopify.com/s/files/1/0556/7973/t/30/assets/free-returns-i.png?3729309556114054824"
-      --             --          ]
-      --             --          [ text "Reset Task List" ]
-      --           ]
+      , div[class "fieldset"][label [] [text "Want to track a task? Add here!"]
       , input [  placeholder "Want to track a task? Add here!"
               , onInput InputTask
-              --, value model.content.todo
+              , value model.newTask.title
+              ]
+              []]
+      , div[class "fieldset"][label [] [text "Description"]
+      , textarea [ onInput InputDescription , value model.newTask.description
               ]
               []
-      , textarea [ onInput InputDescription
-              --, value model.content.todo
               ]
-              []
-      --, div [ myStyle ] [ text "Total no. of tasks : ", text (toString content.taskCount) ]
-      , button [ onClick AddTask ] [text "Create"]
-      , button [ onClick CancelTask ] [text "Cancel"]
+      ,div[class "button-collection"][ button [ class "primary", onClick AddTask ] [text "Create"]
+      , button [ onClick CancelTask ] [text "Cancel"]]
       ]
--- headerStyle =
---     style
---         [ ( "width", "100%" )
---         , ( "height", "40px" )
---         , ( "padding", "10px 0" )
---         , ( "font-size", "2em" )
---         , ( "text-align", "center" )
---         ]
---
---
--- myStyle =
---     style
---         [ ( "width", "100%" )
---         , ( "height", "40px" )
---         , ( "padding", "10px 0" )
---         , ( "font-size", "2em" )
---         , ( "text-align", "center" )
---         ]
---
---
--- buttonStyle =
---     style
---         [ ( "width", "30px" )
---         , ( "height", "30px" )
--- --        , ( "padding", "3px 3px 3px 3px" )
--- --        , ( "margin", "3px 3px 30px 10px" )
---         , ( "text-align", "center" )
---         , ( "cursor", "pointer")
---         , ( "display", "inline" )
---         ]
---
--- deleteStyle =
---     style
---         [("cursor", "pointer")
---         , ("position", "absolute")
---         , ("right","21px")
---         , ("height","21px")
---         , ("margin-right","10px")
---         ]
--- taskLiStyle =
---     style
---         [ ( "padding", "10px 20px 10px 20px" )
---         , ("position", "relative")
---         , ("width","600px")
---         , ("border","0px solid")
---         ]
--- titleStyle =
---     style
---         [ ("top", "7px")
---         , ("left","45px")
---         , ("display","block")
---         , ("overflow", "auto")
---         , ("font-size","1.2em")
---         , ("width","500px")
---         , ("height","25px")
---         , ("position","absolute")
---         , ("border","0px solid")
---         ]
 
 createTaskRequest : Task -> Cmd Msg
 createTaskRequest task =
@@ -462,6 +426,7 @@ newTaskEncoder task =
         , ( "created_by", JE.int task.created_by )
         , ( "owner", JE.int task.ownerId )
         , ( "status", JE.int task.status )
+        , ( "due_date", JE.string task.due_date )
         ]
 
 taskDecoder : Json.Decoder Task
@@ -473,6 +438,7 @@ taskDecoder =
         |> optional "created_by" Json.int 0
         |> optional "owner" Json.int 0
         |> optional "status" Json.int 0
+        |> optional "due_date" Json.string "2019-06-10"
         |> optional "isTaskDeleted" Json.bool False
         |> optional "isTaskCompleted" Json.bool False
 
@@ -489,7 +455,7 @@ defaultComment  user task =
 createCommentRequest : User -> Task -> Comment -> Cmd Msg
 createCommentRequest user task comment =
    Http.post
-       { url = "http://172.15.3.209:9999/task-bucket-api/tasks/comment"
+       { url = "http://172.15.3.209:9999/task-bucket-api/tasks/"++ String.fromInt(task.taskId) ++"/comments"
        , body = Http.jsonBody (createCommentEncoder user task comment)
        , expect = Http.expectJson CommentCreated commentDecoder
        }
@@ -514,9 +480,21 @@ commentDecoder =
 getCommentsRequest : Task -> Cmd Msg
 getCommentsRequest task =
  Http.get
-     { url = "http://172.15.3.209:9999/task-bucket-api/tasks/comments?task_id=" ++ (String.fromInt task.taskId)
+     {
+     url = "http://172.15.3.209:9999/task-bucket-api/tasks/" ++ String.fromInt(task.taskId) ++"/comments"
      , expect = Http.expectJson CommentsFetched commentListDecoder
      }
 
 commentListDecoder : Json.Decoder (List Comment)
 commentListDecoder = Json.list commentDecoder
+
+renderCreateCommentView: Model -> Html Msg
+renderCreateCommentView model =
+ div []
+     [ h1 [] [ text "Create Comments" ]
+     , textarea [ onInput InputCommentText
+             ]
+             []
+     , button [ onClick (AddComment model.currentComment model.newTask)] [text "Create"]
+     , button [ onClick CancelComment ] [text "Cancel"]
+     ]
