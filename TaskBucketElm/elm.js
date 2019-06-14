@@ -5099,7 +5099,7 @@ var author$project$Main$newTaskEncoder = function (task) {
 				'created_by',
 				elm$json$Json$Encode$int(task.created_by)),
 				_Utils_Tuple2(
-				'ownerId',
+				'owner',
 				elm$json$Json$Encode$int(task.ownerId)),
 				_Utils_Tuple2(
 				'status',
@@ -6103,6 +6103,21 @@ var author$project$Main$createTaskRequest = function (task) {
 			url: 'http://172.15.3.209:9999/task-bucket-api/tasks'
 		});
 };
+var author$project$Main$TasksFetched = function (a) {
+	return {$: 'TasksFetched', a: a};
+};
+var elm$json$Json$Decode$list = _Json_decodeList;
+var author$project$Main$taskListDecoder = elm$json$Json$Decode$list(author$project$Main$taskDecoder);
+var elm$http$Http$emptyBody = _Http_emptyBody;
+var elm$http$Http$get = function (r) {
+	return elm$http$Http$request(
+		{body: elm$http$Http$emptyBody, expect: r.expect, headers: _List_Nil, method: 'GET', timeout: elm$core$Maybe$Nothing, tracker: elm$core$Maybe$Nothing, url: r.url});
+};
+var author$project$Main$getTasksRequest = elm$http$Http$get(
+	{
+		expect: A2(elm$http$Http$expectJson, author$project$Main$TasksFetched, author$project$Main$taskListDecoder),
+		url: 'http://172.15.3.209:9999/task-bucket-api/tasks'
+	});
 var elm$core$Basics$neq = _Utils_notEqual;
 var elm$core$Basics$not = _Basics_not;
 var elm$core$List$filter = F2(
@@ -6135,11 +6150,6 @@ var elm$http$Http$expectString = function (toMsg) {
 		elm$http$Http$expectStringResponse,
 		toMsg,
 		elm$http$Http$resolve(elm$core$Result$Ok));
-};
-var elm$http$Http$emptyBody = _Http_emptyBody;
-var elm$http$Http$get = function (r) {
-	return elm$http$Http$request(
-		{body: elm$http$Http$emptyBody, expect: r.expect, headers: _List_Nil, method: 'GET', timeout: elm$core$Maybe$Nothing, tracker: elm$core$Maybe$Nothing, url: r.url});
 };
 var author$project$Main$update = F2(
 	function (msg, model) {
@@ -6210,9 +6220,19 @@ var author$project$Main$update = F2(
 				} else {
 					return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
 				}
+			case 'TaskCreated':
+				if (msg.a.$ === 'Ok') {
+					var task = msg.a.a;
+					return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
+				} else {
+					var err = msg.a.a;
+					return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
+				}
+			case 'GetTasks':
+				return _Utils_Tuple2(model, author$project$Main$getTasksRequest);
 			default:
 				if (msg.a.$ === 'Ok') {
-					var url = msg.a.a;
+					var tasks = msg.a.a;
 					return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
 				} else {
 					var err = msg.a.a;
@@ -6678,7 +6698,6 @@ var elm$url$Url$fromString = function (str) {
 var elm$browser$Browser$document = _Browser_document;
 var elm$core$Platform$Sub$batch = _Platform_batch;
 var elm$core$Platform$Sub$none = elm$core$Platform$Sub$batch(_List_Nil);
-var elm$json$Json$Decode$list = _Json_decodeList;
 var author$project$Main$main = elm$browser$Browser$document(
 	{
 		init: author$project$Main$init,

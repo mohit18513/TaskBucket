@@ -51,6 +51,11 @@ init maybeModel =
   , Cmd.none
   )
 
+-- routeInitialCmd : Cmd Msg
+-- routeInitialCmd  =
+--      getNarrativeDetails endpoint levelUuid selfStudyUuid |> Task.map NarrativeResult
+
+
 onChange handler =
     on "change" (Json.map handler targetValue)
 
@@ -102,6 +107,8 @@ type Msg
     | SwitchVisibility String
     | GotText (Result Http.Error String)
     | TaskCreated (Result Http.Error Task)
+    | GetTasks
+    | TasksFetched  (Result Http.Error (List Task))
 
 --type Visibility1 = All | OutStanding | Completed
 port setStorage : Model -> Cmd msg
@@ -165,11 +172,20 @@ update msg model =
               ({model | todo = fullText} , Cmd.none)
             Err _ ->
               (model, Cmd.none)
-        TaskCreated (Ok url) ->
+        TaskCreated (Ok task) ->
             ( model, Cmd.none )
 
         TaskCreated (Err err) ->
             ( model, Cmd.none )
+        GetTasks ->
+            --log "Value ==" title
+            (model, getTasksRequest )
+        TasksFetched (Ok tasks) ->
+            ( model, Cmd.none )
+
+        TasksFetched (Err err) ->
+            ( model, Cmd.none )
+
 
 
 
@@ -325,6 +341,15 @@ createTaskRequest task =
         --, timeout = Nothing
         --, withCredentials = False
         }
+getTasksRequest : Cmd Msg
+getTasksRequest =
+  Http.get
+      { url = "http://172.15.3.209:9999/task-bucket-api/tasks"
+      , expect = Http.expectJson TasksFetched taskListDecoder
+      --, timeout = Nothing
+      --, withCredentials = False
+      }
+
 
 newTaskEncoder : Task -> JE.Value
 newTaskEncoder task =
@@ -335,7 +360,7 @@ newTaskEncoder task =
         [ ( "title", JE.string task.title )
         , ( "description", JE.string task.description )
         , ( "created_by", JE.int task.created_by )
-        , ( "ownerId", JE.int task.ownerId )
+        , ( "owner", JE.int task.ownerId )
         , ( "status", JE.int task.status )
         ]
 
@@ -350,3 +375,6 @@ taskDecoder =
         |> optional "status" Json.int 0
         |> optional "isTaskDeleted" Json.bool False
         |> optional "isTaskCompleted" Json.bool False
+
+taskListDecoder : Json.Decoder (List Task)
+taskListDecoder = Json.list taskDecoder
