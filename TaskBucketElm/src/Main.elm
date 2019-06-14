@@ -68,8 +68,11 @@ type alias Task =
     , ownerId : Int
     , status : Int
     , due_date : String
+    , createdOn : String
+    , commentedOn : String
     , isTaskDeleted : Bool
     , isTaskCompleted : Bool
+    , showDetails : Bool
     }
 
 type alias User =
@@ -132,8 +135,11 @@ emptyTask =
     , ownerId = 1
     , status = 0
     , due_date = "2019-06-10"
+    , createdOn = ""
+    , commentedOn = ""
     , isTaskDeleted = False
     , isTaskCompleted = False
+    , showDetails = False
     }
 
 emptyUser: User
@@ -169,6 +175,7 @@ type Msg
     | CommentCreated  (Result Http.Error Comment)
     | CreateComment Task
     | UsersFetched (Result Http.Error (List User))
+    | ShowTaskDetails Task
     | ApplyFilter
     | CancelFilter
     | InputFilterDueDate String
@@ -346,6 +353,12 @@ update msg model =
         CancelFilter ->
            ({model | filteredTaskList = model.taskList, renderView = "Dashboard"}, Cmd.none)
 
+        ShowTaskDetails currentTask ->
+          let
+            tasks = model.taskList
+                      |> List.map (\task -> if task.taskId == currentTask.taskId then {task | showDetails = True} else {task | showDetails = False} )
+          in
+           ({model | taskList = tasks}, getCommentsRequest currentTask)
 
 
 keep : String -> List Task -> List Task
@@ -363,29 +376,65 @@ renderList lst model =
         (List.map
             (\l ->
                 li [  ]
-                   [ div [class "list-item"]
-                           [ div[class "list-header"][input [ type_ "checkbox"
-                                   , onClick (MarkItCompleted l.taskId)
-                                   , checked l.isTaskCompleted
-                                   ]
-                                   []
+                   [ div [class "list-item", onClick (ShowTaskDetails l)]
+                           [ div [class "list-header"][div[][label [] [text "Title: "]
                             , label [] [text l.title]
-                            , label [] [text l.due_date]
-                            , div[class "button-collection"][button [ onClick (DeleteIt l.taskId)] [text "Delete"]
+                            , label [] [text "  Status: "]
+                            , label [] [text (getStatus l.status)]
+                            , label [] [text "  Commented On: "]
+                            , label [] [text l.commentedOn]]
+                            , div[class "button-collection"][button [ onClick (DeleteIt l.taskId)] [text "Delete"]]
                             --, button [ class "button", onClick (AddComment (defaultComment model.user l))][text "Add Comment"]]
-                            , button [ class "button", onClick (CreateComment l) ][text "Add Comment"]
-                            , button [ class "button", onClick (FetchComments  l)][text "Show Comments"]]
+                            --, button [ class "button", onClick (CreateComment l) ][text "Add Comment"]
+                            --, button [ class "button", onClick (FetchComments  l)][text "Show Comments"]]
+                            , if l.showDetails then renderTaskDetails l model else text ""
                             ]
                             -- ,div[class "body"][
                             --   text "body here"
                             -- ]
 
+
                            ]
+
 
                     ]
             )
             lst
         )
+
+renderTaskDetails : Task -> Model -> Html Msg
+renderTaskDetails task model =
+        div[]
+        [ div []
+            [ label [][ text "Owner: "]
+            , label [] [text (getUserName model.userList task.ownerId)]
+            , label [][ text "  Due Date: "]
+            , label [] [text task.due_date]
+            , label [][ text "  Created BY: "]
+            , label [] [text (getUserName model.userList task.created_by)]
+            , label [][ text "  Created On: "]
+            , label [] [text task.createdOn]
+            ]
+           , a [onClick (ShowTaskDetails task)] [text task.title]
+           --, div[class "button-collection"][button [ onClick (DeleteIt task.taskId)] [text "Delete"]
+           --, button [ class "button", onClick (AddComment (defaultComment model.user l))][text "Add Comment"]]
+           , div[class "button-collection"][button [ class "button", onClick (CreateComment task) ][text "Add Comment"]
+           , button [ class "button", onClick (FetchComments task)][text "Show Comments"]]
+           ]
+           -- ,div[class "body"][
+           --   text "body here"
+           -- ]
+
+
+getUserName : List User -> Int -> String
+getUserName  users id =
+  let
+    user = users
+      |> List.filter( \u -> u.id == id)
+      |> List.head
+      |> Maybe.withDefault emptyUser
+  in
+    user.name
 
 -- VIEW
 
@@ -393,15 +442,12 @@ renderList lst model =
 view : Model -> Html Msg
 view model =
   let
-    openCreateTaskPanel=
+    openSidePanel=
       case model.renderView of
         "CreateTask" ->
           True
-        _ ->
-          False
-
-    openFilterTasksPanel=
-      case model.renderView of
+        "CreateComment" ->
+          True
         "FilterTasks" ->
           True
         _ ->
@@ -416,10 +462,9 @@ view model =
     ,div [class "panel"]
       [
       renderDashboard model
-      , div [ classList [( "mini-panel", True), ("show", openCreateTaskPanel), ("hide", not openCreateTaskPanel)] ]
-            [ renderCreateTaskView model ]
-      , div [ classList [( "mini-panel", True), ("show", openFilterTasksPanel), ("hide", not openFilterTasksPanel)] ]
-            [ renderFilterView model ]
+      , if model.renderView == "CreateTask" then div [ classList [( "mini-panel", True), ("show", openSidePanel),  ("hide", not openSidePanel)] ][ renderCreateTaskView model ] else text ""
+      , if model.renderView == "CreateComment" then div [ classList [( "mini-panel", True), ("show", openSidePanel),  ("hide", not openSidePanel)] ][ renderCreateCommentView model ] else text ""
+      , if model.renderView == "FilterTasks" then div [ classList [( "mini-panel", True), ("show", openSidePanel), ("hide", not openSidePanel)] ][ renderFilterView model ] else text ""
       ]
   ]
 
@@ -535,8 +580,11 @@ taskDecoder =
         |> optional "owner" Json.int 0
         |> optional "status" Json.int 0
         |> optional "due_date" Json.string "2019-06-10"
+        |> optional "createtime" Json.string ""
+        |> optional "last_commented_on" Json.string ""
         |> optional "isTaskDeleted" Json.bool False
         |> optional "isTaskCompleted" Json.bool False
+        |> optional "showDetails" Json.bool False
 
 taskListDecoder : Json.Decoder (List Task)
 taskListDecoder = Json.list taskDecoder
@@ -612,3 +660,11 @@ getUsersRequest =
 
 userListDecoder : Json.Decoder (List User)
 userListDecoder = Json.list userDecoder
+
+getStatus : Int -> String
+getStatus status =
+  case status of
+    0 -> "New"
+    1 -> "In Progress"
+    2 -> "Completed"
+    _ -> "Cancelled"
