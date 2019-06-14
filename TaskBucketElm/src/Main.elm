@@ -86,6 +86,8 @@ type alias Model =
     , users : List User
     , renderView : String
     , user : User
+    , currentComment : Comment
+    , commentList : List Task
     }
 type alias Comment =
     { commentId : Int
@@ -104,10 +106,12 @@ emptyModel =
       , users = []
       , renderView = "Dashboard"
       , user = emptyUser
+      , currentComment = defaultComment emptyUser emptyTask
+      , commentList =[]
     }
 emptyTask : Task
 emptyTask =
-    { taskId = 0
+    { taskId = 1
     , title = ""
     , description = ""
     , created_by = 1
@@ -143,9 +147,14 @@ type Msg
     | TaskCreated (Result Http.Error Task)
     | GetTasks
     | TasksFetched  (Result Http.Error (List Task))
-    | AddComment  Comment
+    | InputCommentText String
+    | CancelComment
+    | AddComment  Comment Task
+    | FetchComments Task
     | CommentsFetched (Result Http.Error (List Comment))
     | CommentCreated  (Result Http.Error Comment)
+    | CreateComment Task
+
 
 --type Visibility1 = All | OutStanding | Completed
 port setStorage : Model -> Cmd msg
@@ -234,24 +243,42 @@ update msg model =
             _ = Debug.log "Error task fecthed===" err
           in
             ( model, Cmd.none )
-        AddComment  comment ->
-           (model, createCommentRequest model.user emptyTask comment )
-        CommentsFetched (Ok comment) ->
-            ( model, Cmd.none )
+        AddComment  comment task->
+          (model, createCommentRequest model.user task comment )
+
+        FetchComments task->
+           (model, getCommentsRequest task)
+
+        CommentsFetched (Ok comments) ->
+           ( model, Cmd.none )
 
         CommentsFetched (Err err) ->
           let
             _ = Debug.log "Error CommentsFetched fecthed===" err
           in
             ( model, Cmd.none )
+        CreateComment task->
+         ({model | renderView = "CreateComment", newTask = task}, Cmd.none )
+
         CommentCreated (Ok comment) ->
-            ( model, Cmd.none )
+            ( {model | renderView ="Dashboard" }, Cmd.none )
 
         CommentCreated (Err err) ->
           let
             _ = Debug.log "Error CommentCreated fecthed===" err
           in
             ( model, Cmd.none )
+
+        InputCommentText description ->
+         let
+           comment = model.currentComment
+           newComment = {comment | text = description}
+         in
+           ({model | currentComment = newComment}, Cmd.none)
+
+        CancelComment ->
+           ({model | renderView = "Dashboard", currentComment = defaultComment emptyUser emptyTask}, Cmd.none)
+
 
 
 
@@ -280,7 +307,9 @@ renderList lst model =
                                    []
                             , label [] [text l.title]
                             , div[class "button-collection"][button [ onClick (DeleteIt l.taskId)] [text "Delete"]
-                            , button [ class "button", onClick (AddComment (defaultComment model.user l))][text "Add Comment"]]
+                            --, button [ class "button", onClick (AddComment (defaultComment model.user l))][text "Add Comment"]]
+                            , button [ class "button", onClick (CreateComment l) ][text "Add Comment"]
+                            , button [ class "button", onClick (FetchComments  l)][text "Show Comments"]]
                             ]
                             -- ,div[class "body"][
                             --   text "body here"
@@ -426,7 +455,7 @@ defaultComment  user task =
 createCommentRequest : User -> Task -> Comment -> Cmd Msg
 createCommentRequest user task comment =
    Http.post
-       { url = "http://172.15.3.209:9999/task-bucket-api/tasks/comment"
+       { url = "http://172.15.3.209:9999/task-bucket-api/tasks/"++ String.fromInt(task.taskId) ++"/comments"
        , body = Http.jsonBody (createCommentEncoder user task comment)
        , expect = Http.expectJson CommentCreated commentDecoder
        }
@@ -451,9 +480,21 @@ commentDecoder =
 getCommentsRequest : Task -> Cmd Msg
 getCommentsRequest task =
  Http.get
-     { url = "http://172.15.3.209:9999/task-bucket-api/tasks/comments?task_id=" ++ (String.fromInt task.taskId)
+     {
+     url = "http://172.15.3.209:9999/task-bucket-api/tasks/" ++ String.fromInt(task.taskId) ++"/comments"
      , expect = Http.expectJson CommentsFetched commentListDecoder
      }
 
 commentListDecoder : Json.Decoder (List Comment)
 commentListDecoder = Json.list commentDecoder
+
+renderCreateCommentView: Model -> Html Msg
+renderCreateCommentView model =
+ div []
+     [ h1 [] [ text "Create Comments" ]
+     , textarea [ onInput InputCommentText
+             ]
+             []
+     , button [ onClick (AddComment model.currentComment model.newTask)] [text "Create"]
+     , button [ onClick CancelComment ] [text "Cancel"]
+     ]
