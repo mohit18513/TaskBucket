@@ -1,9 +1,11 @@
 package main.java.com.tk20.Entities;
 
-import java.sql.Date;
-import java.sql.Date;
-import java.util.List;
+import java.sql.Timestamp;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Task {
 
 	private String id;
@@ -16,11 +18,13 @@ public class Task {
 
 	private String Owner;
 
-	private String Status;
+	private int Status;
 
-	private Date last_commented_on;
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+	private java.sql.Timestamp last_commented_on;
 
-	private Date due_date;
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+	private java.sql.Timestamp due_date;
 
 	public String getId() {
 		return id;
@@ -62,28 +66,28 @@ public class Task {
 		Owner = string;
 	}
 
-	public String getStatus() {
+	public int getStatus() {
 		return Status;
 	}
 
-	public void setStatus(String status) {
+	public void setStatus(int status) {
 		Status = status;
 	}
 
-	public Date getLast_commented_on() {
+	public Timestamp getLast_commented_on() {
 		return last_commented_on;
 	}
 
-	public void setLast_commented_on(Date last_commented_on) {
+	public void setLast_commented_on(Timestamp last_commented_on) {
 		this.last_commented_on = last_commented_on;
 	}
 
-	public Date getDue_date() {
+	public Timestamp getDue_date() {
 		return due_date;
 	}
 
-	public void setDue_date(Date due_date) {
-		this.due_date = due_date;
+	public void setDue_date(Timestamp timestamp) {
+		this.due_date = timestamp;
 	}
 
 }
