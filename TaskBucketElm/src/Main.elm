@@ -25,7 +25,8 @@ import Json.Decode as Json
 --import Html exposing (Html, Attribute, beginnerProgram, label, text, div, span, input, button, br, h1, ol, li, fieldset, img)
 
 --import Html.Events exposing (on, targetValue, onClick, onInput)
-import Json.Decode as Json
+import Json.Decode.Pipeline exposing (optional, required)
+import Json.Encode as JE
 import List exposing (range, map, append, filter)
 import Debug exposing
   ( log
@@ -56,17 +57,27 @@ onChange handler =
 
 type alias Task =
     { taskId : Int
-    , taskText : String
+    , title : String
+    , description  : String
+    , created_by : Int
+    , ownerId : Int
+    , status : Int
     , isTaskDeleted : Bool
     , isTaskCompleted : Bool
     }
 
-
+type alias User =
+  { userId : Int
+  , firstName : String
+  , lastName : String
+  , userName : String
+  }
 type alias Model =
     { taskCount : Int
-      , todo : String
-      , visibility : String
-      , taskList : List Task
+    , todo : String
+    , visibility : String
+    , taskList : List Task
+    , users : List User
     }
 
 emptyModel : Model
@@ -75,6 +86,7 @@ emptyModel =
       , todo = ""
       , visibility = "All"
       , taskList = []
+      , users = []
     }
 
 
@@ -89,6 +101,7 @@ type Msg
     | MarkItCompleted Int
     | SwitchVisibility String
     | GotText (Result Http.Error String)
+    | TaskCreated (Result Http.Error Task)
 
 --type Visibility1 = All | OutStanding | Completed
 port setStorage : Model -> Cmd msg
@@ -110,13 +123,9 @@ updateWithStorage msg model =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        AddTask taskText ->
-            --log "Value ==" taskText
-            ({ model
-                | taskCount = model.taskCount + 1
-                , todo = ""
-                , taskList = List.append model.taskList [ Task (model.taskCount + 1) taskText False False ]
-            }, Cmd.none)
+        AddTask title ->
+            --log "Value ==" title
+            (model, createTaskRequest (Task 1 title "Hello Description" 1 1 0 False False) )
 
         ClearList ->
             ({ model
@@ -156,6 +165,13 @@ update msg model =
               ({model | todo = fullText} , Cmd.none)
             Err _ ->
               (model, Cmd.none)
+        TaskCreated (Ok url) ->
+            ( model, Cmd.none )
+
+        TaskCreated (Err err) ->
+            ( model, Cmd.none )
+
+
 
 
 keep : String -> List Task -> List Task
@@ -186,7 +202,7 @@ renderList lst =
                                    , checked l.isTaskCompleted
                                    ]
                                    []
-                            , div [] [text l.taskText]
+                            , div [] [text l.title]
                            ]
                     , img [src "http://www.freeiconspng.com/uploads/remove-icon-png-26.png"
                           , alt "Delete/Remove"
@@ -287,7 +303,7 @@ radio value msg isChecked=
 --         , ("width","600px")
 --         , ("border","0px solid")
 --         ]
--- taskTextStyle =
+-- titleStyle =
 --     style
 --         [ ("top", "7px")
 --         , ("left","45px")
@@ -299,3 +315,38 @@ radio value msg isChecked=
 --         , ("position","absolute")
 --         , ("border","0px solid")
 --         ]
+
+createTaskRequest : Task -> Cmd Msg
+createTaskRequest task =
+    Http.post
+        { url = "http://172.15.3.209:9999/task-bucket-api/tasks"
+        , body = Http.jsonBody (newTaskEncoder task)
+        , expect = Http.expectJson TaskCreated taskDecoder
+        --, timeout = Nothing
+        --, withCredentials = False
+        }
+
+newTaskEncoder : Task -> JE.Value
+newTaskEncoder task =
+  let
+    _ = log "task===" task
+  in
+    JE.object
+        [ ( "title", JE.string task.title )
+        , ( "description", JE.string task.description )
+        , ( "created_by", JE.int task.created_by )
+        , ( "ownerId", JE.int task.ownerId )
+        , ( "status", JE.int task.status )
+        ]
+
+taskDecoder : Json.Decoder Task
+taskDecoder =
+    Json.succeed Task
+        |> required "taskId" Json.int
+        |> required "title" Json.string
+        |> optional "description" Json.string ""
+        |> optional "created_by" Json.int 0
+        |> optional "ownerId" Json.int 0
+        |> optional "status" Json.int 0
+        |> optional "isTaskDeleted" Json.bool False
+        |> optional "isTaskCompleted" Json.bool False
