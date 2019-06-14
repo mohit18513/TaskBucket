@@ -67,6 +67,7 @@ type alias Task =
     , created_by : Int
     , ownerId : Int
     , status : Int
+    , due_date : String
     , isTaskDeleted : Bool
     , isTaskCompleted : Bool
     }
@@ -112,6 +113,7 @@ emptyTask =
     , created_by = 1
     , ownerId = 1
     , status = 0
+    , due_date = "2019-06-10"
     , isTaskDeleted = False
     , isTaskCompleted = False
     }
@@ -170,7 +172,10 @@ update msg model =
             --(model, createTaskRequest (Task 1 title "Hello Description" 1 1 0 False False) )
             (model, createTaskRequest model.newTask )
         CreateTask ->
-          ({model | renderView = "CreateTask"}, Cmd.none )
+          let
+            _ = Debug.log "newTask==" model.newTask
+          in
+            ({model | renderView = "CreateTask", newTask = emptyTask}, Cmd.none )
         InputTask title ->
           let
             task = model.newTask
@@ -211,7 +216,7 @@ update msg model =
             }, Cmd.none)
 
         TaskCreated (Ok task) ->
-            ( {model | taskList = [task] ++ model.taskList, renderView = "Dashboard"}, Cmd.none )
+            ( {model | taskList = [task] ++ model.taskList, renderView = "Dashboard", newTask = emptyTask}, Cmd.none )
 
         TaskCreated (Err err) ->
           let
@@ -272,34 +277,26 @@ keep visibility taskList =
       _ ->
         taskList
 
-{- ClearThis y ->
-   {model
-     | taskList = spliceList model.taskList y}
--}
---renderList : List Task -> Html Msg
-
-
 renderList lst model =
     ol []
         (List.map
             (\l ->
                 li [  ]
-                   [ div []
-                           [ input [ type_ "checkbox"
+                   [ div [class "list-item"]
+                           [ div[class "list-header"][input [ type_ "checkbox"
                                    , onClick (MarkItCompleted l.taskId)
                                    , checked l.isTaskCompleted
                                    ]
                                    []
                             , label [] [text l.title]
-                            , button [ onClick (DeleteIt l.taskId)] [text "Delete"]
-                            , button [ class "button", onClick (AddComment (defaultComment model.user l))][text "Add Comment"]
+                            , div[class "button-collection"][button [ onClick (DeleteIt l.taskId)] [text "Delete"]
+                            , button [ class "button", onClick (AddComment (defaultComment model.user l))][text "Add Comment"]]
+                            ]
+                            -- ,div[class "body"][
+                            --   text "body here"
+                            -- ]
+
                            ]
-                    -- , img [src "http://www.freeiconspng.com/uploads/remove-icon-png-26.png"
-                    --       , alt "Delete/Remove"
-                    --       --, deleteStyle
-                    --       , onClick (DeleteIt l.taskId)
-                    --       ]
-                    --       [text "Delete"]
 
                     ]
             )
@@ -311,35 +308,39 @@ renderList lst model =
 
 view : Model -> Html Msg
 view model =
-  case model.renderView of
-    "CreateTask" -> renderCreateTaskView model
-    _ -> renderDashboard model
+  let
+    openSidePanel=
+      case model.renderView of
+        "CreateTask" ->
+          True
+        _ ->
+          False
+  in
+  div[][
+    div[class "header"][
+    h1 [class "headerStyle"] [ text "Dashboard" ]
+    , button [ onClick CreateTask ] [text "Create Task"]
+    ]
+    ,div [class "panel"]
+      [
+
+      renderDashboard model
+      , div [ classList [( "mini-panel", True), ("show", openSidePanel),  ("hide", not openSidePanel)] ][ renderCreateTaskView model ]
+      ]
+  ]
+
 
 renderDashboard: Model -> Html Msg
 renderDashboard model =
-    div []
-        [ h1 [] [ text "Dashboard" ]
-        , button [ onClick CreateTask ] [text "Create Task"]
-        , h2 [] [ text "My Tasks" ]
-        --, h3 [] [ text "Filter by" ]
-        , span [] [ text "Filter by status"
-                    , fieldset []
-                            [ radio "All" (SwitchVisibility "All") (if model.visibility == "All" then True else False)
-                            , radio "Completed" (SwitchVisibility "Completed") (if model.visibility == "Completed" then True else False)
-                            , radio "Outstanding" (SwitchVisibility "OutStanding") (if model.visibility == "OutStanding" then True else False)
-                            ]
-                    -- , button [ --buttonStyle
-                    --           onClick ClearList
-                    --          , src "https://cdn.shopify.com/s/files/1/0556/7973/t/30/assets/free-returns-i.png?3729309556114054824"
-                    --          ]
-                    --          [ text "Reset Task List" ]
+    div [class "main-panel"]
+        [
+        h2 [class "headerStyle"] [ text "My Tasks" ]
+        , div [class "filter"] [  radio "All" (SwitchVisibility "All") (if model.visibility == "All" then True else False)
+                    , radio "Completed" (SwitchVisibility "Completed") (if model.visibility == "Completed" then True else False)
+                    , radio "Outstanding" (SwitchVisibility "OutStanding") (if model.visibility == "OutStanding" then True else False)
+
                   ]
-        -- , input [  placeholder "Want to track a task? Add here!"
-        --         , onChange AddTask
-        --         , value content.todo
-        --         ]
-        --         []
-        --, div [ myStyle ] [ text "Total no. of tasks : ", text (toString content.taskCount) ]
+
         , renderList (keep model.visibility model.taskList) model
         ]
 
@@ -361,29 +362,19 @@ renderCreateTaskView: Model -> Html Msg
 renderCreateTaskView model =
   div []
       [ h1 [] [ text "Create New Task" ]
-      -- , span [] [ fieldset []
-      --                     [ radio "All" (SwitchVisibility "All") (if content.visibility == "All" then True else False)
-      --                     , radio "Completed" (SwitchVisibility "Completed") (if content.visibility == "Completed" then True else False)
-      --                     , radio "Outstanding" (SwitchVisibility "OutStanding") (if content.visibility == "OutStanding" then True else False)
-      --                     ]
-      --             -- , button [ --buttonStyle
-      --             --           onClick ClearList
-      --             --          , src "https://cdn.shopify.com/s/files/1/0556/7973/t/30/assets/free-returns-i.png?3729309556114054824"
-      --             --          ]
-      --             --          [ text "Reset Task List" ]
-      --           ]
+      , div[class "fieldset"][label [] [text "Want to track a task? Add here!"]
       , input [  placeholder "Want to track a task? Add here!"
               , onInput InputTask
-              --, value model.content.todo
+              , value model.newTask.title
+              ]
+              []]
+      , div[class "fieldset"][label [] [text "Description"]
+      , textarea [ onInput InputDescription , value model.newTask.description
               ]
               []
-      , textarea [ onInput InputDescription
-              --, value model.content.todo
               ]
-              []
-      --, div [ myStyle ] [ text "Total no. of tasks : ", text (toString content.taskCount) ]
-      , button [ onClick AddTask ] [text "Create"]
-      , button [ onClick CancelTask ] [text "Cancel"]
+      ,div[class "button-collection"][ button [ class "primary", onClick AddTask ] [text "Create"]
+      , button [ onClick CancelTask ] [text "Cancel"]]
       ]
 
 createTaskRequest : Task -> Cmd Msg
@@ -416,6 +407,7 @@ newTaskEncoder task =
         , ( "created_by", JE.int task.created_by )
         , ( "owner", JE.int task.ownerId )
         , ( "status", JE.int task.status )
+        , ( "due_date", JE.string task.due_date )
         ]
 
 taskDecoder : Json.Decoder Task
@@ -427,6 +419,7 @@ taskDecoder =
         |> optional "created_by" Json.int 0
         |> optional "owner" Json.int 0
         |> optional "status" Json.int 0
+        |> optional "due_date" Json.string "2019-06-10"
         |> optional "isTaskDeleted" Json.bool False
         |> optional "isTaskCompleted" Json.bool False
 
