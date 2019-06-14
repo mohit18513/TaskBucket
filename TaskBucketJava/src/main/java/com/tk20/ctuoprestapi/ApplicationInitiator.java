@@ -7,14 +7,13 @@ import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfigurat
 
 //@PropertySource(value = "classpath:main/java/resources/application.properties")
 @EnableAutoConfiguration(exclude = HibernateJpaAutoConfiguration.class)
-@SpringBootApplication( scanBasePackages = { "main.java.com.tk20" } )
-public class ApplicationInitiator
-{
+@SpringBootApplication(scanBasePackages = { "main.java.com.tk20" })
+public class ApplicationInitiator {
 
-    public static void main( String[] args )
-    {
+	public static void main(String[] args) {
 
-        SpringApplication.run( ApplicationInitiator.class, args );
-        System.out.println( "Application Started" );
-    }
+		SpringApplication.run(ApplicationInitiator.class, args);
+		System.out.println("Application Started");
+	}
+
 }

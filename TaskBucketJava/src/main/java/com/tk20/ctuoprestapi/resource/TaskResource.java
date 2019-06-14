@@ -1,6 +1,7 @@
 package main.java.com.tk20.ctuoprestapi.resource;
 
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -12,7 +13,6 @@ import javax.sql.DataSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -33,13 +33,14 @@ public class TaskResource {
 
 	@CrossOrigin(origins = "*")
 	@GetMapping("")
-	public Set<Task> getStudentInformation(@RequestParam String user_id) {
+	public Set<Task> getTasks(@RequestParam String user_id) {
 
 		ResultSet taskCursor = null;
 		Set<Task> tasks = new HashSet<>();
 		ResultSet assessorCursor = null;
 		try (Connection con = dataSource.getConnection()) {
 			String taskQuery = "select * from tasks;";
+			// String taskQuery = "select * from tasks ts, task_user tu where ;";
 			PreparedStatement pstmt = con.prepareStatement(taskQuery);
 			System.out.println("Query Created..");
 			taskCursor = pstmt.executeQuery();
@@ -50,6 +51,11 @@ public class TaskResource {
 				task.setId(taskCursor.getString("id"));
 				task.setTitle(taskCursor.getString("title"));
 				task.setDescription(taskCursor.getString("description"));
+				task.setDue_date(Date.valueOf(taskCursor.getString("setdue_date")));
+				task.setCreated_by(taskCursor.getString("created_by"));
+				task.setOwner(taskCursor.getString("owner"));
+				task.setStatus(taskCursor.getString("status"));
+				task.setLast_commented_on(Date.valueOf(taskCursor.getString("last_commented_on")));
 				tasks.add(task);
 			}
 

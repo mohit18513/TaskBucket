@@ -1,10 +1,26 @@
 package main.java.com.tk20.Entities;
 
 import java.sql.Date;
-import java.sql.Timestamp;
+import java.sql.Date;
 import java.util.List;
 
 public class Task {
+
+	private String id;
+
+	private String title;
+
+	private String description;
+
+	private String created_by;
+
+	private String Owner;
+
+	private String Status;
+
+	private Date last_commented_on;
+
+	private Date due_date;
 
 	public String getId() {
 		return id;
@@ -30,36 +46,20 @@ public class Task {
 		this.description = description;
 	}
 
-	private String id;
-
-	private String title;
-
-	private String description;
-
-	private Date due_date;
-
-	public Date getDue_date() {
-		return due_date;
-	}
-
-	public void setDue_date(Date due_date) {
-		this.due_date = due_date;
-	}
-
-	public Date getCreated_by() {
+	public String getCreated_by() {
 		return created_by;
 	}
 
-	public void setCreated_by(Date created_by) {
+	public void setCreated_by(String created_by) {
 		this.created_by = created_by;
 	}
 
-	public Integer getOwner() {
+	public String getOwner() {
 		return Owner;
 	}
 
-	public void setOwner(Integer owner) {
-		Owner = owner;
+	public void setOwner(String string) {
+		Owner = string;
 	}
 
 	public String getStatus() {
@@ -70,19 +70,20 @@ public class Task {
 		Status = status;
 	}
 
-	public Timestamp getLast_commented_on() {
+	public Date getLast_commented_on() {
 		return last_commented_on;
 	}
 
-	public void setLast_commented_on(Timestamp last_commented_on) {
+	public void setLast_commented_on(Date last_commented_on) {
 		this.last_commented_on = last_commented_on;
 	}
 
-	private Date created_by;
+	public Date getDue_date() {
+		return due_date;
+	}
 
-	private Integer Owner;
-	private String Status;
-
-	private Timestamp last_commented_on;
+	public void setDue_date(Date due_date) {
+		this.due_date = due_date;
+	}
 
 }
