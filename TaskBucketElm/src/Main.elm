@@ -83,12 +83,15 @@ type alias Model =
     , newTask : Task
     , visibility : String
     , taskList : List Task
+    , filteredTaskList : List Task
     , userList : List User
     , renderView : String
     , user : User
     , currentComment : Comment
     , commentList : List Task
+    , filterValues : FilterValues
     }
+
 type alias Comment =
     { commentId : Int
     , taskId :  Int
@@ -96,6 +99,11 @@ type alias Comment =
     , createdBy : Int
     }
 
+type alias FilterValues =
+    { due_date : String
+    , createdBy : Int
+    , titleSearchText : String
+    }
 
 emptyModel : Model
 emptyModel =
@@ -103,12 +111,18 @@ emptyModel =
       , newTask = emptyTask
       , visibility = "All"
       , taskList = []
+      , filteredTaskList = []
       , userList = []
       , renderView = "Dashboard"
       , user = emptyUser
       , currentComment = defaultComment emptyUser emptyTask
-      , commentList =[]
+      , commentList = []
+      , filterValues = { due_date = "2019-06-15"
+                        , createdBy = 1
+                        , titleSearchText = ""
+                      }
     }
+
 emptyTask : Task
 emptyTask =
     { taskId = 1
@@ -137,6 +151,7 @@ emptyUser =
 type Msg
     = AddTask
     | CreateTask
+    | ShowFilterPanel
     | InputTask String
     | InputDescription String
     | CancelTask
@@ -154,7 +169,10 @@ type Msg
     | CommentCreated  (Result Http.Error Comment)
     | CreateComment Task
     | UsersFetched (Result Http.Error (List User))
-
+    | ApplyFilter
+    | CancelFilter
+    | InputFilterDueDate String
+    | InputFilterTitleSearchText String
 
 --type Visibility1 = All | OutStanding | Completed
 port setStorage : Model -> Cmd msg
@@ -185,6 +203,11 @@ update msg model =
             _ = Debug.log "newTask==" model.newTask
           in
             ({model | renderView = "CreateTask", newTask = emptyTask}, Cmd.none )
+        ShowFilterPanel ->
+          let
+            _ = Debug.log "showFilterPanel==" ""
+          in
+            ({model | renderView = "FilterTasks"}, Cmd.none )
         InputTask title ->
           let
             task = model.newTask
@@ -236,7 +259,7 @@ update msg model =
             --log "Value ==" title
             (model, getTasksRequest )
         TasksFetched (Ok tasks) ->
-            ( {model | taskList = tasks}, Cmd.none )
+            ( {model | taskList = tasks, filteredTaskList = tasks}, Cmd.none )
 
         TasksFetched (Err err) ->
           let
@@ -287,6 +310,41 @@ update msg model =
             _ = Debug.log "Error users fecthed===" err
           in
             ( model, Cmd.none )
+        InputFilterDueDate due_date ->
+         let
+           _ = Debug.log "InputFilterDueDate ===" due_date
+           filterValues = model.filterValues
+           filterValuesUpdated = {filterValues | due_date = due_date}
+         in
+           ({model | filterValues = filterValuesUpdated}, Cmd.none)
+        InputFilterTitleSearchText searchText ->
+           let
+             _ = Debug.log "InputFilterTitleSearchText ===" searchText
+             filterValues = model.filterValues
+             filterValuesUpdated = {filterValues | titleSearchText = searchText}
+           in
+           ({model | filterValues = filterValuesUpdated}, Cmd.none)
+        ApplyFilter ->
+          let
+            _ = Debug.log "ApplyFilter ==="
+            tempFilteredTaskList =
+              if model.filterValues.due_date == "" then
+                model.taskList
+              else
+                List.filter (\task -> task.due_date == model.filterValues.due_date) model.taskList
+
+            temp1FilteredTaskList =
+              if model.filterValues.titleSearchText == "" then
+                tempFilteredTaskList
+              else
+                List.filter (\task -> String.contains (String.toLower model.filterValues.titleSearchText) (String.toLower task.title) ) tempFilteredTaskList
+
+          in
+            ({ model
+                | filteredTaskList = temp1FilteredTaskList
+            }, Cmd.none)
+        CancelFilter ->
+           ({model | filteredTaskList = model.taskList, renderView = "Dashboard"}, Cmd.none)
 
 
 
@@ -312,6 +370,7 @@ renderList lst model =
                                    ]
                                    []
                             , label [] [text l.title]
+                            , label [] [text l.due_date]
                             , div[class "button-collection"][button [ onClick (DeleteIt l.taskId)] [text "Delete"]
                             --, button [ class "button", onClick (AddComment (defaultComment model.user l))][text "Add Comment"]]
                             , button [ class "button", onClick (CreateComment l) ][text "Add Comment"]
@@ -334,9 +393,16 @@ renderList lst model =
 view : Model -> Html Msg
 view model =
   let
-    openSidePanel=
+    openCreateTaskPanel=
       case model.renderView of
         "CreateTask" ->
+          True
+        _ ->
+          False
+
+    openFilterTasksPanel=
+      case model.renderView of
+        "FilterTasks" ->
           True
         _ ->
           False
@@ -345,12 +411,15 @@ view model =
     div[class "header"][
     h1 [class "headerStyle"] [ text "Dashboard" ]
     , button [ onClick CreateTask ] [text "Create Task"]
+    , button [ onClick ShowFilterPanel ] [text "Filter Tasks"]
     ]
     ,div [class "panel"]
       [
-
       renderDashboard model
-      , div [ classList [( "mini-panel", True), ("show", openSidePanel),  ("hide", not openSidePanel)] ][ renderCreateTaskView model ]
+      , div [ classList [( "mini-panel", True), ("show", openCreateTaskPanel), ("hide", not openCreateTaskPanel)] ]
+            [ renderCreateTaskView model ]
+      , div [ classList [( "mini-panel", True), ("show", openFilterTasksPanel), ("hide", not openFilterTasksPanel)] ]
+            [ renderFilterView model ]
       ]
   ]
 
@@ -366,7 +435,7 @@ renderDashboard model =
 
                   ]
 
-        , renderList (keep model.visibility model.taskList) model
+        , renderList (keep model.visibility model.filteredTaskList) model
         ]
 
 
@@ -383,6 +452,7 @@ radio value msg isChecked=
             ] []
     , text value
     ]
+
 renderCreateTaskView: Model -> Html Msg
 renderCreateTaskView model =
   div []
@@ -402,10 +472,30 @@ renderCreateTaskView model =
       , button [ onClick CancelTask ] [text "Cancel"]]
       ]
 
+renderFilterView: Model -> Html Msg
+renderFilterView model =
+  div []
+      [ h1 [] [ text "Filter Tasks" ]
+      , div[class "fieldset"][label [] [text "Title : "]
+      , input [  placeholder ""
+              , onInput InputFilterTitleSearchText  -- InputTask
+              , value model.filterValues.titleSearchText
+              ]
+              []]
+      , div[class "fieldset"][label [] [text "Due On : "]
+      , input [  placeholder ""
+              , onInput InputFilterDueDate  -- InputTask
+              , value model.filterValues.due_date
+              ]
+              []]
+      , div[class "button-collection"][ button [ class "primary", onClick ApplyFilter ] [text "Apply"]
+      , button [ onClick CancelFilter ] [text "Cancel"]]
+      ]
+
 createTaskRequest : Task -> Cmd Msg
 createTaskRequest task =
     Http.post
-        { url = "http://172.15.3.209:9999/task-bucket-api/tasks"
+        { url = "http://172.15.3.11:9999/task-bucket-api/tasks"
         , body = Http.jsonBody (newTaskEncoder task)
         , expect = Http.expectJson TaskCreated taskDecoder
         --, timeout = Nothing
@@ -414,7 +504,7 @@ createTaskRequest task =
 getTasksRequest : Cmd Msg
 getTasksRequest =
   Http.get
-      { url = "http://172.15.3.209:9999/task-bucket-api/tasks"
+      { url = "http://172.15.3.11:9999/task-bucket-api/tasks"
       , expect = Http.expectJson TasksFetched taskListDecoder
       --, timeout = Nothing
       --, withCredentials = False
@@ -461,7 +551,7 @@ defaultComment  user task =
 createCommentRequest : User -> Task -> Comment -> Cmd Msg
 createCommentRequest user task comment =
    Http.post
-       { url = "http://172.15.3.209:9999/task-bucket-api/tasks/"++ String.fromInt(task.taskId) ++"/comments"
+       { url = "http://172.15.3.11:9999/task-bucket-api/tasks/"++ String.fromInt(task.taskId) ++"/comments"
        , body = Http.jsonBody (createCommentEncoder user task comment)
        , expect = Http.expectJson CommentCreated commentDecoder
        }
@@ -487,7 +577,7 @@ getCommentsRequest : Task -> Cmd Msg
 getCommentsRequest task =
  Http.get
      {
-     url = "http://172.15.3.209:9999/task-bucket-api/tasks/" ++ String.fromInt(task.taskId) ++"/comments"
+     url = "http://172.15.3.11:9999/task-bucket-api/tasks/" ++ String.fromInt(task.taskId) ++"/comments"
      , expect = Http.expectJson CommentsFetched commentListDecoder
      }
 
@@ -504,7 +594,7 @@ renderCreateCommentView model =
      , button [ onClick (AddComment model.currentComment model.newTask)] [text "Create"]
      , button [ onClick CancelComment ] [text "Cancel"]
      ]
-     
+
 userDecoder : Json.Decoder User
 userDecoder =
    Json.succeed User
@@ -516,7 +606,7 @@ userDecoder =
 getUsersRequest : Cmd Msg
 getUsersRequest =
  Http.get
-     { url = "http://172.15.3.209:9999/task-bucket-api/users"
+     { url = "http://172.15.3.11:9999/task-bucket-api/users"
      , expect = Http.expectJson UsersFetched userListDecoder
      }
 
