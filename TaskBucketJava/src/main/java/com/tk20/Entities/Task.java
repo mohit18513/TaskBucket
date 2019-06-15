@@ -21,16 +21,16 @@ public class Task {
 
 	private int status;
 
-	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+	@JsonFormat( timezone = "GMT+5:30", shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
 	private Timestamp createtime;
 
-	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+	@JsonFormat( timezone = "GMT+5:30", shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
 	private Timestamp updatetime;
 
-	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+	@JsonFormat( timezone = "GMT+5:30", shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
 	private java.sql.Timestamp last_commented_on;
 
-	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+	@JsonFormat( timezone = "GMT+5:30", shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
 	private java.sql.Timestamp due_date;
 
 	private List<Contributor> contributorList;
