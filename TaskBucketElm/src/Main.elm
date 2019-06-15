@@ -40,7 +40,7 @@ main =
     Browser.document
         { init = init
         , view = \model -> { title = "Task Bucket", body = [view model] }
-        , update = updateWithStorage
+        , update = update
         , subscriptions = \_ -> Sub.none
         }
     --beginnerProgram { model = model, view = view1, update = update1 }
@@ -236,20 +236,22 @@ type Msg
     | Login
     | UserLoggedIn (Result Http.Error User)
     | LogOut
---type Visibility1 = All | OutStanding | Completed
-port setStorage : Model -> Cmd msg
+
+--type Visibility = All | New | InProgress | Completed | Cancelled
+
+--port setStorage : Model -> Cmd msg
 
 --    | ClearThis String
 
-updateWithStorage : Msg -> Model -> ( Model, Cmd Msg )
-updateWithStorage msg model =
-    let
-        ( newModel, cmds ) =
-            update msg model
-    in
-        ( newModel
-        , Cmd.batch [ setStorage newModel, cmds ]
-        )
+-- updateWithStorage : Msg -> Model -> ( Model, Cmd Msg )
+-- updateWithStorage msg model =
+--     let
+--         ( newModel, cmds ) =
+--             update msg model
+--     in
+--         ( newModel
+--         , Cmd.batch [ setStorage newModel, cmds ]
+--         )
 
 
 
@@ -343,11 +345,14 @@ update msg model =
                                                 else task
                                       ) model.taskList
             },Cmd.none)
+
         SwitchVisibility visibility ->
-            --log (toString visibility)
-            ({ model
-                | visibility = visibility
-            }, Cmd.none)
+            let
+              _ = Debug.log "SwitchVisibility" visibility
+            in
+              ({ model
+                  | visibility = visibility
+              }, Cmd.none)
 
         TaskCreated (Ok task) ->
             ( {model | taskList = [task] ++ model.taskList, renderView = "Dashboard", newTask = emptyTask}, Task.perform (\_ -> CancelFilter ) (Task.succeed ()) )
@@ -622,10 +627,14 @@ update msg model =
 keep : String -> List Task -> List Task
 keep visibility taskList =
   case visibility of
+      "New" ->
+        List.filter (\task -> task.status == 0) taskList
+      "InProgress" ->
+        List.filter (\task -> task.status == 1) taskList
       "Completed" ->
-        List.filter (\task -> task.isTaskCompleted) taskList
-      "OutStanding" ->
-        List.filter (\task -> not task.isTaskCompleted) taskList
+        List.filter (\task -> task.status == 2) taskList
+      "Cancelled" ->
+        List.filter (\task -> task.status == 3) taskList
       _ ->
         taskList
 
@@ -795,7 +804,9 @@ view model =
 loginView : Model -> Html Msg
 loginView model =
   div []
-    [ div [][ label [] [text "UserName: "]
+    [ div [][ img [src "/assets/WTM_logo.jpg", width 300, height 300] []]
+    , span [class "taskBucket"][ text "Task Bucket"]
+    , div [][ label [] [text "UserName: "]
     , input [  placeholder "Enter Your Email Id"
             , onInput EnterUseEmail
             , value model.loginUser.userEmail
@@ -817,9 +828,11 @@ renderDashboard model =
     div [class "main-panel"]
         [ h2 [class "headerStyle"] [ text "My Tasks" ]
         , div [class "filter"]
-              [  radio "All" (SwitchVisibility "All") (if model.visibility == "All" then True else False)
+              [ radio "All" (SwitchVisibility "All") (if model.visibility == "All" then True else False)
+              , radio "New" (SwitchVisibility "New") (if model.visibility == "New" then True else False)
+              , radio "In_Progress" (SwitchVisibility "InProgress") (if model.visibility == "InProgress" then True else False)
               , radio "Completed" (SwitchVisibility "Completed") (if model.visibility == "Completed" then True else False)
-              , radio "Outstanding" (SwitchVisibility "OutStanding") (if model.visibility == "OutStanding" then True else False)
+              , radio "Cancelled" (SwitchVisibility "Cancelled") (if model.visibility == "Cancelled" then True else False)
               ]
         , renderList (keep model.visibility model.filteredTaskList) model
         ]
