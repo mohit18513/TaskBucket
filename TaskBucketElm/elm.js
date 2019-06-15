@@ -4494,7 +4494,7 @@ var author$project$Main$defaultComment = F2(
 		return A4(author$project$Main$Comment, 0, task.taskId, task.title, user.id);
 	});
 var elm$core$Basics$False = {$: 'False'};
-var author$project$Main$emptyTask = {commentedOn: '', createdOn: '', created_by: 1, description: '', due_date: '2019-06-10', isTaskCompleted: false, isTaskDeleted: false, ownerId: 1, showDetails: false, status: 0, taskId: 1, title: ''};
+var author$project$Main$emptyTask = {commentedOn: '', createdOn: '', created_by: 1, description: '', due_date: '', isTaskCompleted: false, isTaskDeleted: false, ownerId: 1, showDetails: false, status: 0, taskId: 1, title: ''};
 var author$project$Main$emptyUser = {email: 'mjindal', id: 1, name: 'Mohit'};
 var elm$core$Basics$EQ = {$: 'EQ'};
 var elm$core$Basics$LT = {$: 'LT'};
@@ -6577,7 +6577,7 @@ var author$project$Main$update = F2(
 						model,
 						{renderView: 'FilterTasks'}),
 					elm$core$Platform$Cmd$none);
-			case 'InputTask':
+			case 'InputTaskTitle':
 				var title = msg.a;
 				var task = model.newTask;
 				var newTask = _Utils_update(
@@ -6594,6 +6594,17 @@ var author$project$Main$update = F2(
 				var newTask = _Utils_update(
 					task,
 					{description: description});
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{newTask: newTask}),
+					elm$core$Platform$Cmd$none);
+			case 'InputTaskDueDate':
+				var due_date = msg.a;
+				var task = model.newTask;
+				var newTask = _Utils_update(
+					task,
+					{due_date: due_date});
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
@@ -6976,8 +6987,11 @@ var author$project$Main$CancelTask = {$: 'CancelTask'};
 var author$project$Main$InputDescription = function (a) {
 	return {$: 'InputDescription', a: a};
 };
-var author$project$Main$InputTask = function (a) {
-	return {$: 'InputTask', a: a};
+var author$project$Main$InputTaskDueDate = function (a) {
+	return {$: 'InputTaskDueDate', a: a};
+};
+var author$project$Main$InputTaskTitle = function (a) {
+	return {$: 'InputTaskTitle', a: a};
 };
 var elm$json$Json$Decode$map = _Json_map1;
 var elm$virtual_dom$VirtualDom$toHandlerInt = function (handler) {
@@ -7090,8 +7104,8 @@ var author$project$Main$renderCreateTaskView = function (model) {
 						elm$html$Html$input,
 						_List_fromArray(
 							[
-								elm$html$Html$Attributes$placeholder('Want to track a task? Add here!'),
-								elm$html$Html$Events$onInput(author$project$Main$InputTask),
+								elm$html$Html$Attributes$placeholder('Title'),
+								elm$html$Html$Events$onInput(author$project$Main$InputTaskTitle),
 								elm$html$Html$Attributes$value(model.newTask.title)
 							]),
 						_List_Nil)
@@ -7117,6 +7131,31 @@ var author$project$Main$renderCreateTaskView = function (model) {
 							[
 								elm$html$Html$Events$onInput(author$project$Main$InputDescription),
 								elm$html$Html$Attributes$value(model.newTask.description)
+							]),
+						_List_Nil)
+					])),
+				A2(
+				elm$html$Html$div,
+				_List_fromArray(
+					[
+						elm$html$Html$Attributes$class('fieldset')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						elm$html$Html$label,
+						_List_Nil,
+						_List_fromArray(
+							[
+								elm$html$Html$text('Due Date')
+							])),
+						A2(
+						elm$html$Html$input,
+						_List_fromArray(
+							[
+								elm$html$Html$Attributes$placeholder('YYYY-MM-DD'),
+								elm$html$Html$Events$onInput(author$project$Main$InputTaskDueDate),
+								elm$html$Html$Attributes$value(model.newTask.due_date)
 							]),
 						_List_Nil)
 					])),
@@ -7220,7 +7259,7 @@ var author$project$Main$getStatus = function (status) {
 		case 0:
 			return 'New';
 		case 1:
-			return 'In Progress';
+			return 'In-Progress';
 		case 2:
 			return 'Completed';
 		default:
@@ -7353,6 +7392,7 @@ var author$project$Main$renderTaskComments = function (comments) {
 			},
 			comments));
 };
+var elm$html$Html$span = _VirtualDom_node('span');
 var author$project$Main$renderTaskDetails = F2(
 	function (task, model) {
 		return A2(
@@ -7365,6 +7405,20 @@ var author$project$Main$renderTaskDetails = F2(
 					_List_Nil,
 					_List_fromArray(
 						[
+							A2(
+							elm$html$Html$label,
+							_List_Nil,
+							_List_fromArray(
+								[
+									elm$html$Html$text('  Description: ')
+								])),
+							A2(
+							elm$html$Html$span,
+							_List_Nil,
+							_List_fromArray(
+								[
+									elm$html$Html$text(task.description)
+								])),
 							A2(
 							elm$html$Html$label,
 							_List_Nil,
@@ -7500,59 +7554,61 @@ var author$project$Main$renderList = F2(
 																elm$html$Html$text('Title: ')
 															])),
 														A2(
-														elm$html$Html$label,
+														elm$html$Html$span,
 														_List_Nil,
 														_List_fromArray(
 															[
 																elm$html$Html$text(l.title)
 															])),
 														A2(
-														elm$html$Html$label,
-														_List_Nil,
+														elm$html$Html$div,
 														_List_fromArray(
 															[
-																elm$html$Html$text('  Description: ')
+																elm$html$Html$Attributes$class('status')
+															]),
+														_List_fromArray(
+															[
+																A2(
+																elm$html$Html$span,
+																_List_fromArray(
+																	[
+																		elm$html$Html$Attributes$class(
+																		author$project$Main$getStatus(l.status))
+																	]),
+																_List_fromArray(
+																	[
+																		elm$html$Html$text(
+																		author$project$Main$getStatus(l.status))
+																	]))
 															])),
 														A2(
-														elm$html$Html$label,
-														_List_Nil,
+														elm$html$Html$div,
 														_List_fromArray(
 															[
-																elm$html$Html$text(l.description)
-															])),
-														A2(
-														elm$html$Html$label,
-														_List_Nil,
+																elm$html$Html$Attributes$class('comment')
+															]),
 														_List_fromArray(
 															[
-																elm$html$Html$text('  Status: ')
-															])),
-														A2(
-														elm$html$Html$label,
-														_List_Nil,
-														_List_fromArray(
-															[
-																elm$html$Html$text(
-																author$project$Main$getStatus(l.status))
-															])),
-														A2(
-														elm$html$Html$label,
-														_List_Nil,
-														_List_fromArray(
-															[
-																elm$html$Html$text('  Commented On: ')
-															])),
-														A2(
-														elm$html$Html$label,
-														_List_Nil,
-														_List_fromArray(
-															[
-																elm$html$Html$text(l.commentedOn)
+																A2(
+																elm$html$Html$label,
+																_List_Nil,
+																_List_fromArray(
+																	[
+																		elm$html$Html$text('  Commented On: ')
+																	])),
+																A2(
+																elm$html$Html$span,
+																_List_Nil,
+																_List_fromArray(
+																	[
+																		elm$html$Html$text(l.commentedOn)
+																	]))
 															])),
 														A2(
 														elm$html$Html$button,
 														_List_fromArray(
 															[
+																elm$html$Html$Attributes$class('delete'),
 																elm$html$Html$Events$onClick(
 																author$project$Main$DeleteIt(l.taskId))
 															]),
@@ -7639,7 +7695,6 @@ var author$project$Main$ToggleCreatorDropdown = {$: 'ToggleCreatorDropdown'};
 var elm$core$Basics$negate = function (n) {
 	return -n;
 };
-var elm$html$Html$span = _VirtualDom_node('span');
 var elm$html$Html$ul = _VirtualDom_node('ul');
 var elm$virtual_dom$VirtualDom$attribute = F2(
 	function (key, value) {
@@ -7718,7 +7773,10 @@ var author$project$Main$renderCreatorDropdown = function (model) {
 					model.userList) : _List_Nil),
 				A2(
 				elm$html$Html$ul,
-				_List_Nil,
+				_List_fromArray(
+					[
+						elm$html$Html$Attributes$class('selected_option')
+					]),
 				A2(
 					elm$core$List$map,
 					function (x) {
@@ -7799,7 +7857,10 @@ var author$project$Main$renderOwnerDropdown = function (model) {
 					model.userList) : _List_Nil),
 				A2(
 				elm$html$Html$ul,
-				_List_Nil,
+				_List_fromArray(
+					[
+						elm$html$Html$Attributes$class('selected_option')
+					]),
 				A2(
 					elm$core$List$map,
 					function (x) {
@@ -8016,7 +8077,8 @@ var author$project$Main$view = function (model) {
 						elm$html$Html$button,
 						_List_fromArray(
 							[
-								elm$html$Html$Events$onClick(author$project$Main$CreateTask)
+								elm$html$Html$Events$onClick(author$project$Main$CreateTask),
+								elm$html$Html$Attributes$class('btn-secondary')
 							]),
 						_List_fromArray(
 							[
@@ -8026,7 +8088,8 @@ var author$project$Main$view = function (model) {
 						elm$html$Html$button,
 						_List_fromArray(
 							[
-								elm$html$Html$Events$onClick(author$project$Main$ShowFilterPanel)
+								elm$html$Html$Events$onClick(author$project$Main$ShowFilterPanel),
+								elm$html$Html$Attributes$class('btn-secondary')
 							]),
 						_List_fromArray(
 							[

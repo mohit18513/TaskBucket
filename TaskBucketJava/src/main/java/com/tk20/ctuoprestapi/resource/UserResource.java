@@ -4,10 +4,14 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
 
 import javax.sql.DataSource;
+
+import main.java.com.ExceptionHandlers.ApplicationException;
+import main.java.com.ExceptionHandlers.InvalidMethodRequestException;
+import main.java.com.tk20.Entities.User;
+import main.java.com.tk20.services.Logger;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -23,11 +27,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.google.common.base.Throwables;
 
-import main.java.com.ExceptionHandlers.ApplicationException;
-import main.java.com.ExceptionHandlers.InvalidMethodRequestException;
-import main.java.com.tk20.Entities.User;
-import main.java.com.tk20.services.Logger;
-
 @RestController
 @RequestMapping(path = "/task-bucket-api/users")
 public class UserResource {
@@ -41,10 +40,10 @@ public class UserResource {
 
 	@CrossOrigin(origins = "*")
 	@GetMapping("")
-	public Set<User> getStudentInformation() {
+	public ArrayList<User> getStudentInformation() {
 
 		ResultSet userCursor = null;
-		Set<User> users = new HashSet<>();
+		ArrayList<User> users = new ArrayList<>();
 		ResultSet assessorCursor = null;
 		try (Connection con = dataSource.getConnection()) {
 			String userQuery = "select * from users order by name asc;";
