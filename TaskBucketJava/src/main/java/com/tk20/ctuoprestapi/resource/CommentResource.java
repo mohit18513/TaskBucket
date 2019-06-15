@@ -75,7 +75,7 @@ public class CommentResource {
 
 	@CrossOrigin(origins = "*")
 	@PostMapping(path = "", consumes = MediaType.APPLICATION_JSON_VALUE)
-	public Comment createcomments(@RequestBody Comment comment, @PathVariable int task_id) {
+	public Comment createComments(@RequestBody Comment comment, @PathVariable int task_id) {
 		String sql = "INSERT INTO comments (task_id  , text, created_by, created_on, createtime ) VALUES (?,?,?,now(), now())";
 		ResultSet commentCursor = null;
 		PreparedStatement pstmt2 = null;
@@ -84,6 +84,12 @@ public class CommentResource {
 			pstmt.setString(2, comment.getText());
 			pstmt.setInt(3, comment.getCreated_by());
 			pstmt.executeUpdate();
+
+			String updateTaskQuery = "UPDATE tasks SET last_commented_on = now() where id = ?";
+			pstmt2 = conn.prepareStatement(updateTaskQuery);
+			pstmt2.setInt(1, task_id);
+			pstmt2.executeUpdate();
+
 			String commentQuery = "select * from comments order by createtime desc limit 1;";
 			pstmt2 = conn.prepareStatement(commentQuery);
 			// pstmt.setInt(1, user_id);
