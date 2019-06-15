@@ -104,6 +104,7 @@ type alias Comment =
 
 type alias FilterValues =
     { due_date : String
+    , create_date : String
     , createdBy : Int
     , titleSearchText : String
     , showCreatorDropdown : Bool
@@ -125,6 +126,7 @@ emptyModel =
       , currentComment = defaultComment emptyUser emptyTask
       , commentList = []
       , filterValues = { due_date = "2019-06-15"
+                        , create_date = "2019-6-15"
                         , createdBy = 1
                         , titleSearchText = ""
                         , showCreatorDropdown = False
@@ -187,6 +189,7 @@ type Msg
     | ApplyFilter
     | CancelFilter
     | InputFilterDueDate String
+    | InputFilterCreateDate String
     | InputFilterTitleSearchText String
     | ToggleCreatorDropdown
     | FilterCreatorRecord User
@@ -333,6 +336,13 @@ update msg model =
            filterValuesUpdated = {filterValues | due_date = due_date}
          in
            ({model | filterValues = filterValuesUpdated}, Cmd.none)
+        InputFilterCreateDate create_date ->
+         let
+           _ = Debug.log "InputFilterCreateDate ===" create_date
+           filterValues = model.filterValues
+           filterValuesUpdated = {filterValues | create_date = create_date}
+         in
+           ({model | filterValues = filterValuesUpdated}, Cmd.none)
         InputFilterTitleSearchText searchText ->
            let
              _ = Debug.log "InputFilterTitleSearchText ===" searchText
@@ -349,11 +359,17 @@ update msg model =
               else
                 List.filter (\task -> task.due_date == model.filterValues.due_date) model.taskList
 
+            temp0FilteredTaskList =
+              if model.filterValues.create_date == "" then
+                tempFilteredTaskList
+              else
+                List.filter (\task -> task.createdOn == model.filterValues.create_date) tempFilteredTaskList
+
             temp1FilteredTaskList =
               if model.filterValues.titleSearchText == "" then
                 tempFilteredTaskList
               else
-                List.filter (\task -> String.contains (String.toLower model.filterValues.titleSearchText) (String.toLower task.title) ) tempFilteredTaskList
+                List.filter (\task -> String.contains (String.toLower model.filterValues.titleSearchText) (String.toLower task.title) ) temp0FilteredTaskList
 
             temp2FilteredTaskList =
               let
@@ -619,6 +635,12 @@ renderFilterView model =
       , input [  placeholder ""
               , onInput InputFilterDueDate  -- InputTask
               , value model.filterValues.due_date
+              ]
+              []]
+      , div[class "fieldset"][label [] [text "Created On : "]
+      , input [  placeholder ""
+              , onInput InputFilterCreateDate  -- InputTask
+              , value model.filterValues.create_date
               ]
               []]
       , div[class "button-collection"][ button [ class "primary", onClick ApplyFilter ] [text "Apply"]
