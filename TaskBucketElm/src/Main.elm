@@ -586,7 +586,7 @@ renderList lst model =
                               label [] [text "  Commented On: "]
                                , span [] [text l.commentedOn]
                             ]
-                            , button [ onClick (DeleteTask l)] [text "Delete"]]
+                            , button [ class "delete", onClick (DeleteTask l)] [text "Delete"]]
                             --, button [ class "button-tertiary", onClick (AddComment (defaultComment model.user l))][text "Add Comment"]]
                             --, button [ class "button-tertiary", onClick (CreateComment l) ][text "Add Comment"]
                             --, button [ class "button-tertiary", onClick (FetchComments  l)][text "Show Comments"]]
@@ -688,6 +688,7 @@ view model =
       renderDashboard model
       , if model.renderView == "CreateTask" then div [ classList [( "mini-panel", True), ("show", openSidePanel),  ("hide", not openSidePanel)] ][ renderCreateTaskView model ] else text ""
       , if model.renderView == "FilterTasks" then div [ classList [( "mini-panel", True), ("show", openSidePanel), ("hide", not openSidePanel)] ][ renderFilterView model ] else text ""
+        ]
       ]
 
 loginView : Model -> Html Msg
@@ -1080,36 +1081,37 @@ renderOwnerDropdown model=
 
 renderCreateTaskOwnerDropdown: Model -> Html Msg
 renderCreateTaskOwnerDropdown model=
-   let
-      dropDownClass = "dropdown-select"
-   in
-   div [ class dropDownClass ]
-                [ button
-                    [
-                     class "selectedoption button"
-                    , id "orgnode_dd"
-                    ]
-                    [ span [ class "overflowcontrol" ]
-                        [ text "Select-Owner", text model.tempCreatTaskOwnerName]
-                    ]
-                , ul
-                    [ id "orgnode-dd-listbox"
-                    , class "option"
-                    , class "options nobullets"
-                    , tabindex -1
-                    ]
-                    (List.map
-                        (\x ->
-                            li
-                                [ attribute "aria-selected" "true"
-                                , class ""
-                                , onClick (SetCreateTaskOwner x)
-                                , id (x.email ++ "_li")
-                                , attribute "role" "option"
-                                ]
-                                [ text x.name ]
-                        )
-                        model.userList
-                    )
-                ,ul []  (List.map (\x -> li[] [text x.name] ) model.filterValues.selectedOwnerList)
-                ]
+  let
+     dropDownClass = "dropdown-select"
+  in
+  div [ class "dropDownClass textareaBtn" ]
+               [ button
+                   [
+                    class "selectedoption button"
+                   , id "orgnode_dd"
+                   ]
+                   [ span [ class "overflowcontrol" ]
+                       [ text "Select-Owner"]
+                   ]
+               , span[ class "selectedOwner"][text model.tempCreatTaskOwnerName]
+               , ul
+                   [ id "orgnode-dd-listbox"
+                   , class "option"
+                   , class "options nobullets"
+                   , tabindex -1
+                   ]
+                   (List.map
+                       (\x ->
+                           li
+                               [ attribute "aria-selected" "true"
+                               , class ""
+                               , onClick (SetCreateTaskOwner x)
+                               , id (x.email ++ "_li")
+                               , attribute "role" "option"
+                               ]
+                               [ text x.name ]
+                       )
+                       model.userList
+                   )
+               ,ul []  (List.map (\x -> li[] [text x.name] ) model.filterValues.selectedOwnerList)
+               ]

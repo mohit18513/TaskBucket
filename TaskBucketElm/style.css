@@ -30,7 +30,7 @@ button{
   background: #c5c7c9;
   border-radius: 3px;
   border: 1px solid #c5c7c9;
-   font-size: 14px;
+   font-size: 13px;
    font-weight: bold;
    color:#363636;
    cursor:pointer;
@@ -188,9 +188,6 @@ textarea{
 .header button{
 	background-color:#fff;
 }
-.header button + button{
-	margin-right:0;
-}
 .filter {
 	margin-top:20px;
 }
@@ -208,7 +205,7 @@ textarea{
     font-size:13px;
     max-width: 218px;
 }
-.dropdown-select .option{
+.dropdown-select .option,.textareaBtn .option{
 	background-color: #f1f1f1;
 	border:1px solid #ddd;
 	margin:0;
@@ -216,12 +213,12 @@ textarea{
 	color:#333;
     max-width: 218px;
 }
-.dropdown-select .option li{
+.dropdown-select .option li,.textareaBtn .option li{
 	line-height:1.4em;
 	padding:10px 15px;
 	font-size:13px;
 }
-.dropdown-select .option li:hover{
+.dropdown-select .option li:hover,.textareaBtn .option li:hover{
 	background-color:#ccc;
 	cursor: default;
 }
@@ -245,4 +242,15 @@ textarea{
 }
 .selected_option li:hover{
 	    background: #575195;
+}
+.textareaBtn{
+ width:auto;
+ max-width: none;
+ margin-top: 10px;
+}
+.selectedOwner{
+ display: inline-block;
+ font-weight: bold;
+ color: #575195;
+ font-size: 13px;
 }
