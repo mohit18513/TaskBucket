@@ -1,3 +1,5 @@
+
+@import url("https://fonts.googleapis.com/css?family=Lato&display=swap");
 ol,li{
   list-style: none;
   padding: 0;
@@ -7,11 +9,11 @@ body{
   padding: 0;
   margin: 0;
   background: #fafafa;
+  font-family: 'Lato', sans-serif;
 }
 .header{
   background: #575195;
   padding: 20px;
-  width: 100%;
   display: flex;
   justify-content: space-between;
   color: #fff;
@@ -22,12 +24,44 @@ body{
   height: 40px;
   margin-right: 40px;
 }
+button{
+  padding: 10px 10px;
+  margin-right: 20px;
+  background: #c5c7c9;
+  border-radius: 3px;
+  border: 1px solid #c5c7c9;
+   font-size: 13px;
+   font-weight: bold;
+   color:#363636;
+   cursor:pointer;
+}
+button.primary{
+  background: #575195;
+  border: 1px solid #575195;
+  color: #fff;
+}
+
+.fieldset input,.fieldset textarea{
+	border:1px solid #c5c7c9;
+	padding: 10px 7px;
+    color: #111;
+    font-size: 14px;
+    width:100%;
+    max-width:200px;
+    border-radius:3px;
+}
+.fieldset input:focus,.fieldset textarea:focus{
+	box-shadow:0px 0px 8px #ddd;
+	border-color:#555;
+}
+.fieldset textarea{
+	margin-top:5px;
+}
 .headerStyle{
   width: 100%;
   height: 40px;
   padding: 0;
   margin: 0;
-  font-size: 18px;
   font-weight: 700;
 }
 .panel{
@@ -39,15 +73,15 @@ body{
   padding: 30px;
   margin-right: 10px;
   box-shadow: 0px 2px 2px #eee;
-  height: 497px;
+  min-height: 497px;
   background: #fff;
 }
 .mini-panel{
-  max-width: 400px;
   padding:30px;
   box-shadow: 0px 2px 2px #eee;
-  height: 497px;
+  min-height: 497px;
   background: #fff;
+      box-shadow: 0px 0px 5px #aaa;
 }
 .mini-panel.hide{
   display: none;
@@ -76,12 +110,63 @@ textarea{
   margin-top: 20px;
 }
 .list-item{
-  box-shadow: 2px 2px 5px #333;
+  box-shadow: 2px 2px 5px #aaa;
   border-radius: 4px;
   margin-top: 20px;
 }
 .list-header{
   position: relative;
+}
+.list-item .list-header label{
+	font-weight:bold;
+	padding:5px 3px 5px 0;
+	color: #575195;
+}
+.list-item .list-header span{
+	padding:5px 10px 5px 0;
+}
+.list-item .list-header .delete{
+	background-color: #f19e9e;
+	border-color:#f19e9e;
+	position: absolute;
+    right: 0;
+    top: 19px;
+    padding: 7px;
+    font-size: 13px;
+}
+.list-item .list-header .status{
+	display:inline-block;
+}
+.list-item .list-header .status span{
+	padding: 3px 10px;
+    border-radius: 4px;
+	color:#fff;
+	font-size:12px;
+	text-align:center;
+}
+.list-item .list-header .status .New{
+	background-color: green;
+}
+.list-item .list-header .status .In-Progress{
+	background-color: #608fca;
+}
+.list-item .list-header .status .Completed{
+	background-color: #b70404;
+}
+.list-item .list-header .status .Cancelled{
+	background-color: grey;
+}
+.list-item .list-header .comment{
+	 float: right;
+     margin-right: 65px;
+     font-size:12px;
+     margin-top:3px;
+}
+.list-item .list-header .comment label{
+	color:#777;
+}
+.list-item .list-header .comment span{
+	color:#111;
 }
 .list-header .button-collection{
   position: absolute;
@@ -96,19 +181,76 @@ textarea{
   border-top: 1px solid #333;
   padding: 20px;
 }
-button{
-  padding: 5px 15px;
-  margin-right: 20px;
-  background: #c5c7c9;
-  border-radius: 3px;
-  border: 1px solid #c5c7c9;
-}
-button.primary{
-  background: #575195;
-  border: 1px solid #575195;
-  color: #fff;
-}
 
-.filter{
-
+.button-collection button{
+	min-width:80px;
+}
+.header button{
+	background-color:#fff;
+}
+.filter {
+	margin-top:20px;
+}
+.filter label{
+	background-color:#f5f5f5;
+	padding:15px;
+	text-align:center;
+}
+.dropdown-select{
+	position:relative;
+}
+.dropdown-select .selectedoption{
+	background-color: transparent;
+    width: 100%;
+    font-size:13px;
+    max-width: 218px;
+}
+.dropdown-select .option,.textareaBtn .option{
+	background-color: #f1f1f1;
+	border:1px solid #ddd;
+	margin:0;
+	padding:0;
+	color:#333;
+    max-width: 218px;
+}
+.dropdown-select .option li,.textareaBtn .option li{
+	line-height:1.4em;
+	padding:10px 15px;
+	font-size:13px;
+}
+.dropdown-select .option li:hover,.textareaBtn .option li:hover{
+	background-color:#ccc;
+	cursor: default;
+}
+.dropdown-select .selectedoption:hover{
+	background-color:#ddd;
+}
+.selected_option{
+	padding:0;
+}
+.selected_option li{
+	display:inline-block;
+	background-color:#aaa;
+	padding:2px 5px;
+	border-radius:2px;
+	text-align:center;
+	font-size:13px;
+	color:#fff;
+	cursor:pointer;
+	margin-right:5px;
+	margin-bottom:5px;
+}
+.selected_option li:hover{
+	    background: #575195;
+}
+.textareaBtn{
+ width:auto;
+ max-width: none;
+ margin-top: 10px;
+}
+.selectedOwner{
+ display: inline-block;
+ font-weight: bold;
+ color: #575195;
+ font-size: 13px;
 }
