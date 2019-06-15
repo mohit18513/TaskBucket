@@ -91,7 +91,7 @@ type alias Model =
     , renderView : String
     , user : User
     , currentComment : Comment
-    , commentList : List Task
+    , commentList : List Comment
     , filterValues : FilterValues
     }
 
@@ -180,7 +180,6 @@ type Msg
     | InputCommentText String
     | CancelComment
     | AddComment  Comment Task
-    | FetchComments Task
     | CommentsFetched (Result Http.Error (List Comment))
     | CommentCreated  (Result Http.Error Comment)
     | CreateComment Task
@@ -288,11 +287,8 @@ update msg model =
         AddComment  comment task->
           (model, createCommentRequest model.user task comment )
 
-        FetchComments task->
-           (model, getCommentsRequest task)
-
         CommentsFetched (Ok comments) ->
-           ( model, Cmd.none )
+           ( {model | commentList = comments} , Cmd.none )
 
         CommentsFetched (Err err) ->
           let
@@ -303,7 +299,7 @@ update msg model =
          ({model | renderView = "CreateComment", newTask = task}, Cmd.none )
 
         CommentCreated (Ok comment) ->
-            ( {model | renderView ="Dashboard" }, Cmd.none )
+            ( {model | renderView ="Dashboard" }, getCommentsRequest comment.taskId )
 
         CommentCreated (Err err) ->
           let
@@ -406,7 +402,7 @@ update msg model =
             tasks = model.taskList
                       |> List.map (\task -> if task.taskId == currentTask.taskId then {task | showDetails = True} else {task | showDetails = False} )
           in
-           ({model | taskList = tasks}, getCommentsRequest currentTask)
+           ({model | taskList = tasks}, getCommentsRequest currentTask.taskId)
 
         ToggleCreatorDropdown ->
           let
@@ -477,14 +473,16 @@ renderList lst model =
         (List.map
             (\l ->
                 li [  ]
-                   [ div [class "list-item", onClick (ShowTaskDetails l)]
-                           [ div [class "list-header"][div[][label [] [text "Title: "]
+                   [ div [class "list-item"]
+                           [ div [class "list-header"][div[onClick (ShowTaskDetails l)][label [] [text "Title: "]
                             , label [] [text l.title]
+                            , label [] [text "  Description: "]
+                            , label [] [text (l.description)]
                             , label [] [text "  Status: "]
                             , label [] [text (getStatus l.status)]
                             , label [] [text "  Commented On: "]
-                            , label [] [text l.commentedOn]]
-                            , div[class "button-collection"][button [ onClick (DeleteIt l.taskId)] [text "Delete"]]
+                            , label [] [text l.commentedOn]
+                            , button [ onClick (DeleteIt l.taskId)] [text "Delete"]]
                             --, button [ class "button", onClick (AddComment (defaultComment model.user l))][text "Add Comment"]]
                             --, button [ class "button", onClick (CreateComment l) ][text "Add Comment"]
                             --, button [ class "button", onClick (FetchComments  l)][text "Show Comments"]]
@@ -503,24 +501,38 @@ renderList lst model =
             lst
         )
 
+renderTaskComments: List Comment -> Html msg
+renderTaskComments comments =
+    ol []
+        (List.map
+            (\comment ->
+                li [  ]
+                   [ div [class "list-item"]
+                           [ div [class "list-header"][div[][textarea [] [text comment.text]]]
+                           ]
+                    ]
+            )
+            comments
+        )
+
 renderTaskDetails : Task -> Model -> Html Msg
 renderTaskDetails task model =
-        div[]
+      div []
         [ div []
             [ label [][ text "Owner: "]
             , label [] [text (getUserName model.userList task.ownerId)]
             , label [][ text "  Due Date: "]
             , label [] [text task.due_date]
-            , label [][ text "  Created BY: "]
+            , label [][ text "  Created By: "]
             , label [] [text (getUserName model.userList task.created_by)]
             , label [][ text "  Created On: "]
             , label [] [text task.createdOn]
             ]
-           , a [onClick (ShowTaskDetails task)] [text task.title]
+           --, a [onClick (ShowTaskDetails task)] [text task.title]
            --, div[class "button-collection"][button [ onClick (DeleteIt task.taskId)] [text "Delete"]
            --, button [ class "button", onClick (AddComment (defaultComment model.user l))][text "Add Comment"]]
-           , div[class "button-collection"][button [ class "button", onClick (CreateComment task) ][text "Add Comment"]
-           , button [ class "button", onClick (FetchComments task)][text "Show Comments"]]
+           , if model.renderView == "CreateComment" then div [ ][ renderCreateCommentView model ] else div [class "button-collection"][button [ class "button", onClick (CreateComment task) ][text "Add Comment"]]
+           , renderTaskComments model.commentList  --button [ class "button", onClick (FetchComments task)][text "Show Comments"]
            ]
            -- ,div[class "body"][
            --   text "body here"
@@ -564,7 +576,6 @@ view model =
       [
       renderDashboard model
       , if model.renderView == "CreateTask" then div [ classList [( "mini-panel", True), ("show", openSidePanel),  ("hide", not openSidePanel)] ][ renderCreateTaskView model ] else text ""
-      , if model.renderView == "CreateComment" then div [ classList [( "mini-panel", True), ("show", openSidePanel),  ("hide", not openSidePanel)] ][ renderCreateCommentView model ] else text ""
       , if model.renderView == "FilterTasks" then div [ classList [( "mini-panel", True), ("show", openSidePanel), ("hide", not openSidePanel)] ][ renderFilterView model ] else text ""
       ]
   ]
@@ -574,7 +585,7 @@ renderDashboard: Model -> Html Msg
 renderDashboard model =
     div [class "main-panel"]
         [
-        h2 [class "headerStyle"] [ text "My Tasks" ]
+        h2 [class "headerStyle"] [ text ("My Tasks" ++ model.renderView) ]
         , div [class "filter"] [  radio "All" (SwitchVisibility "All") (if model.visibility == "All" then True else False)
                     , radio "Completed" (SwitchVisibility "Completed") (if model.visibility == "Completed" then True else False)
                     , radio "Outstanding" (SwitchVisibility "OutStanding") (if model.visibility == "OutStanding" then True else False)
@@ -725,17 +736,17 @@ createCommentEncoder user task comment=
 commentDecoder : Json.Decoder Comment
 commentDecoder =
    Json.succeed Comment
-       |> required "commentId" Json.int
-       |> required "taskId" Json.int
+       |> required "id" Json.int
+       |> required "task_id" Json.int
        |> optional "text" Json.string ""
-       |> optional "createdBy" Json.int 1
+       |> optional "created_by" Json.int 1
 
 
-getCommentsRequest : Task -> Cmd Msg
-getCommentsRequest task =
+getCommentsRequest : Int -> Cmd Msg
+getCommentsRequest taskId =
  Http.get
      {
-     url = "http://172.15.3.11:9999/task-bucket-api/tasks/" ++ String.fromInt(task.taskId) ++"/comments"
+     url = "http://172.15.3.11:9999/task-bucket-api/tasks/" ++ String.fromInt(taskId) ++"/comments"
      , expect = Http.expectJson CommentsFetched commentListDecoder
      }
 
