@@ -47,7 +47,7 @@ main =
 
 init : Maybe Model -> ( Model, Cmd Msg )
 init maybeModel =
-  ( Maybe.withDefault emptyModel maybeModel
+  ( Maybe.withDefault emptyModel (Just emptyModel)
   , Cmd.batch [ getTasksRequest, getUsersRequest ]
   )
 --
@@ -80,6 +80,14 @@ type alias User =
   , name : String
   , email : String
   }
+
+type alias ID =
+    { id : Int
+    }
+type alias Message =
+    { message : String
+    }
+
 
 type alias Model =
     { taskCount : Int
@@ -171,10 +179,11 @@ type Msg
     | InputTask String
     | InputDescription String
     | CancelTask
-    | DeleteIt Int
+    | DeleteTask Task
     | MarkItCompleted Int
     | SwitchVisibility String
     | TaskCreated (Result Http.Error Task)
+    | TaskDeleted (Result Http.Error Message)
     | GetTasks
     | TasksFetched  (Result Http.Error (List Task))
     | InputCommentText String
@@ -243,12 +252,16 @@ update msg model =
         CancelTask ->
           ({model | renderView = "Dashboard", newTask= emptyTask}, Cmd.none)
 
-        DeleteIt id ->
+        DeleteTask taskToBeDeleted ->
+          let
+            taskList = List.filter (\task -> task.taskId /= taskToBeDeleted.taskId) model.taskList
+          in
             --log (toString id)
             ({ model
                 | taskCount = model.taskCount
-                , taskList = List.filter (\task -> task.taskId /= id) model.taskList
-            }, Cmd.none)
+                , taskList = taskList
+                , filteredTaskList = taskList
+            }, deleteTaskRequest taskToBeDeleted)
         MarkItCompleted id ->
           -- let
           --   log "Hello G==" id
@@ -271,6 +284,14 @@ update msg model =
         TaskCreated (Err err) ->
           let
             _ = Debug.log "Error TaskCreated==" err
+          in
+            ( model, Cmd.none )
+        TaskDeleted (Ok message) ->
+            ( model, Cmd.none )
+
+        TaskDeleted (Err err) ->
+          let
+            _ = Debug.log "Error TaskDeleted==" err
           in
             ( model, Cmd.none )
         GetTasks ->
@@ -399,10 +420,10 @@ update msg model =
 
         ShowTaskDetails currentTask ->
           let
-            tasks = model.taskList
+            tasks = model.filteredTaskList
                       |> List.map (\task -> if task.taskId == currentTask.taskId then {task | showDetails = True} else {task | showDetails = False} )
           in
-           ({model | taskList = tasks}, getCommentsRequest currentTask.taskId)
+           ({model | filteredTaskList = tasks}, getCommentsRequest currentTask.taskId)
 
         ToggleCreatorDropdown ->
           let
@@ -481,8 +502,8 @@ renderList lst model =
                             , label [] [text "  Status: "]
                             , label [] [text (getStatus l.status)]
                             , label [] [text "  Commented On: "]
-                            , label [] [text l.commentedOn]
-                            , button [ onClick (DeleteIt l.taskId)] [text "Delete"]]
+                            , label [] [text l.commentedOn]]
+                            , button [ onClick (DeleteTask l)] [text "Delete"]
                             --, button [ class "button", onClick (AddComment (defaultComment model.user l))][text "Add Comment"]]
                             --, button [ class "button", onClick (CreateComment l) ][text "Add Comment"]
                             --, button [ class "button", onClick (FetchComments  l)][text "Show Comments"]]
@@ -517,6 +538,9 @@ renderTaskComments comments =
 
 renderTaskDetails : Task -> Model -> Html Msg
 renderTaskDetails task model =
+  let
+    _ = Debug.log "task details===" task
+  in
       div []
         [ div []
             [ label [][ text "Owner: "]
@@ -529,7 +553,7 @@ renderTaskDetails task model =
             , label [] [text task.createdOn]
             ]
            --, a [onClick (ShowTaskDetails task)] [text task.title]
-           --, div[class "button-collection"][button [ onClick (DeleteIt task.taskId)] [text "Delete"]
+           --, div[class "button-collection"][button [ onClick (DeleteTask task.taskId)] [text "Delete"]
            --, button [ class "button", onClick (AddComment (defaultComment model.user l))][text "Add Comment"]]
            , if model.renderView == "CreateComment" then div [ ][ renderCreateCommentView model ] else div [class "button-collection"][button [ class "button", onClick (CreateComment task) ][text "Add Comment"]]
            , renderTaskComments model.commentList  --button [ class "button", onClick (FetchComments task)][text "Show Comments"]
@@ -690,6 +714,20 @@ newTaskEncoder task =
         , ( "status", JE.int task.status )
         , ( "due_date", JE.string task.due_date )
         ]
+taskEncoder : Task -> JE.Value
+taskEncoder task =
+  let
+    _ = log "task===" task
+  in
+    JE.object
+        [ ( "id", JE.int task.taskId )
+        , ( "title", JE.string task.title )
+        , ( "description", JE.string task.description )
+        , ( "created_by", JE.int task.created_by )
+        , ( "owner", JE.int task.ownerId )
+        , ( "status", JE.int task.status )
+        , ( "due_date", JE.string task.due_date )
+        ]
 
 taskDecoder : Json.Decoder Task
 taskDecoder =
@@ -706,6 +744,17 @@ taskDecoder =
         |> optional "isTaskDeleted" Json.bool False
         |> optional "isTaskCompleted" Json.bool False
         |> optional "showDetails" Json.bool False
+
+intDecoder : Json.Decoder ID
+intDecoder =
+    Json.succeed ID
+        |> required "id" Json.int
+
+deleteMessageDecoder : Json.Decoder Message
+deleteMessageDecoder =
+    Json.succeed Message
+        |> required "message" Json.string
+
 
 taskListDecoder : Json.Decoder (List Task)
 taskListDecoder = Json.list taskDecoder
@@ -749,6 +798,16 @@ getCommentsRequest taskId =
      url = "http://172.15.3.11:9999/task-bucket-api/tasks/" ++ String.fromInt(taskId) ++"/comments"
      , expect = Http.expectJson CommentsFetched commentListDecoder
      }
+
+deleteTaskRequest : Task -> Cmd Msg
+deleteTaskRequest task =
+    Http.post
+        { url = "http://172.15.3.11:9999/task-bucket-api/tasks/delete"
+        , body = Http.jsonBody (taskEncoder task)
+        , expect = Http.expectJson TaskDeleted deleteMessageDecoder
+        --, timeout = Nothing
+        --, withCredentials = False
+        }
 
 commentListDecoder : Json.Decoder (List Comment)
 commentListDecoder = Json.list commentDecoder

@@ -4579,7 +4579,7 @@ var elm$core$Set$toList = function (_n0) {
 var author$project$Main$emptyModel = {
 	commentList: _List_Nil,
 	currentComment: A2(author$project$Main$defaultComment, author$project$Main$emptyUser, author$project$Main$emptyTask),
-	filterValues: {createdBy: 1, due_date: '2019-06-15', selectedCreatorList: _List_Nil, selectedOwnerList: _List_Nil, showCreatorDropdown: false, showOwnerDropdown: false, titleSearchText: ''},
+	filterValues: {create_date: '2019-6-15', createdBy: 1, due_date: '2019-06-15', selectedCreatorList: _List_Nil, selectedOwnerList: _List_Nil, showCreatorDropdown: false, showOwnerDropdown: false, titleSearchText: ''},
 	filteredTaskList: _List_Nil,
 	newTask: author$project$Main$emptyTask,
 	renderView: 'Dashboard',
@@ -6060,7 +6060,10 @@ var elm$core$Maybe$withDefault = F2(
 var elm$core$Platform$Cmd$batch = _Platform_batch;
 var author$project$Main$init = function (maybeModel) {
 	return _Utils_Tuple2(
-		A2(elm$core$Maybe$withDefault, author$project$Main$emptyModel, maybeModel),
+		A2(
+			elm$core$Maybe$withDefault,
+			author$project$Main$emptyModel,
+			elm$core$Maybe$Just(author$project$Main$emptyModel)),
 		elm$core$Platform$Cmd$batch(
 			_List_fromArray(
 				[author$project$Main$getTasksRequest, author$project$Main$getUsersRequest])));
@@ -6104,41 +6107,17 @@ var author$project$Main$setStorage = _Platform_outgoingPort(
 								_List_fromArray(
 									[
 										_Utils_Tuple2(
-										'commentedOn',
-										elm$json$Json$Encode$string($.commentedOn)),
+										'commentId',
+										elm$json$Json$Encode$int($.commentId)),
 										_Utils_Tuple2(
-										'createdOn',
-										elm$json$Json$Encode$string($.createdOn)),
-										_Utils_Tuple2(
-										'created_by',
-										elm$json$Json$Encode$int($.created_by)),
-										_Utils_Tuple2(
-										'description',
-										elm$json$Json$Encode$string($.description)),
-										_Utils_Tuple2(
-										'due_date',
-										elm$json$Json$Encode$string($.due_date)),
-										_Utils_Tuple2(
-										'isTaskCompleted',
-										elm$json$Json$Encode$bool($.isTaskCompleted)),
-										_Utils_Tuple2(
-										'isTaskDeleted',
-										elm$json$Json$Encode$bool($.isTaskDeleted)),
-										_Utils_Tuple2(
-										'ownerId',
-										elm$json$Json$Encode$int($.ownerId)),
-										_Utils_Tuple2(
-										'showDetails',
-										elm$json$Json$Encode$bool($.showDetails)),
-										_Utils_Tuple2(
-										'status',
-										elm$json$Json$Encode$int($.status)),
+										'createdBy',
+										elm$json$Json$Encode$int($.createdBy)),
 										_Utils_Tuple2(
 										'taskId',
 										elm$json$Json$Encode$int($.taskId)),
 										_Utils_Tuple2(
-										'title',
-										elm$json$Json$Encode$string($.title))
+										'text',
+										elm$json$Json$Encode$string($.text))
 									]));
 						})($.commentList)),
 					_Utils_Tuple2(
@@ -6167,6 +6146,9 @@ var author$project$Main$setStorage = _Platform_outgoingPort(
 						return elm$json$Json$Encode$object(
 							_List_fromArray(
 								[
+									_Utils_Tuple2(
+									'create_date',
+									elm$json$Json$Encode$string($.create_date)),
 									_Utils_Tuple2(
 									'createdBy',
 									elm$json$Json$Encode$int($.createdBy)),
@@ -6405,7 +6387,7 @@ var author$project$Main$CommentCreated = function (a) {
 };
 var author$project$Main$commentDecoder = A4(
 	NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
-	'createdBy',
+	'created_by',
 	elm$json$Json$Decode$int,
 	1,
 	A4(
@@ -6415,11 +6397,11 @@ var author$project$Main$commentDecoder = A4(
 		'',
 		A3(
 			NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-			'taskId',
+			'task_id',
 			elm$json$Json$Decode$int,
 			A3(
 				NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-				'commentId',
+				'id',
 				elm$json$Json$Decode$int,
 				elm$json$Json$Decode$succeed(author$project$Main$Comment)))));
 var author$project$Main$createCommentEncoder = F3(
@@ -6496,15 +6478,63 @@ var author$project$Main$createTaskRequest = function (task) {
 			url: 'http://172.15.3.11:9999/task-bucket-api/tasks'
 		});
 };
+var author$project$Main$TaskDeleted = function (a) {
+	return {$: 'TaskDeleted', a: a};
+};
+var author$project$Main$Message = function (message) {
+	return {message: message};
+};
+var author$project$Main$deleteMessageDecoder = A3(
+	NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+	'message',
+	elm$json$Json$Decode$string,
+	elm$json$Json$Decode$succeed(author$project$Main$Message));
+var author$project$Main$taskEncoder = function (task) {
+	var _n0 = A2(elm$core$Debug$log, 'task===', task);
+	return elm$json$Json$Encode$object(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'id',
+				elm$json$Json$Encode$int(task.taskId)),
+				_Utils_Tuple2(
+				'title',
+				elm$json$Json$Encode$string(task.title)),
+				_Utils_Tuple2(
+				'description',
+				elm$json$Json$Encode$string(task.description)),
+				_Utils_Tuple2(
+				'created_by',
+				elm$json$Json$Encode$int(task.created_by)),
+				_Utils_Tuple2(
+				'owner',
+				elm$json$Json$Encode$int(task.ownerId)),
+				_Utils_Tuple2(
+				'status',
+				elm$json$Json$Encode$int(task.status)),
+				_Utils_Tuple2(
+				'due_date',
+				elm$json$Json$Encode$string(task.due_date))
+			]));
+};
+var author$project$Main$deleteTaskRequest = function (task) {
+	return elm$http$Http$post(
+		{
+			body: elm$http$Http$jsonBody(
+				author$project$Main$taskEncoder(task)),
+			expect: A2(elm$http$Http$expectJson, author$project$Main$TaskDeleted, author$project$Main$deleteMessageDecoder),
+			url: 'http://172.15.3.11:9999/task-bucket-api/tasks/delete'
+		});
+};
 var author$project$Main$CommentsFetched = function (a) {
 	return {$: 'CommentsFetched', a: a};
 };
 var author$project$Main$commentListDecoder = elm$json$Json$Decode$list(author$project$Main$commentDecoder);
-var author$project$Main$getCommentsRequest = function (task) {
+var author$project$Main$getCommentsRequest = function (taskId) {
 	return elm$http$Http$get(
 		{
 			expect: A2(elm$http$Http$expectJson, author$project$Main$CommentsFetched, author$project$Main$commentListDecoder),
-			url: 'http://172.15.3.11:9999/task-bucket-api/tasks/' + (elm$core$String$fromInt(task.taskId) + '/comments')
+			url: 'http://172.15.3.11:9999/task-bucket-api/tasks/' + (elm$core$String$fromInt(taskId) + '/comments')
 		});
 };
 var elm$core$Basics$neq = _Utils_notEqual;
@@ -6623,21 +6653,19 @@ var author$project$Main$update = F2(
 						model,
 						{newTask: author$project$Main$emptyTask, renderView: 'Dashboard'}),
 					elm$core$Platform$Cmd$none);
-			case 'DeleteIt':
-				var id = msg.a;
+			case 'DeleteTask':
+				var taskToBeDeleted = msg.a;
+				var taskList = A2(
+					elm$core$List$filter,
+					function (task) {
+						return !_Utils_eq(task.taskId, taskToBeDeleted.taskId);
+					},
+					model.taskList);
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
-						{
-							taskCount: model.taskCount,
-							taskList: A2(
-								elm$core$List$filter,
-								function (task) {
-									return !_Utils_eq(task.taskId, id);
-								},
-								model.taskList)
-						}),
-					elm$core$Platform$Cmd$none);
+						{filteredTaskList: taskList, taskCount: model.taskCount, taskList: taskList}),
+					author$project$Main$deleteTaskRequest(taskToBeDeleted));
 			case 'MarkItCompleted':
 				var id = msg.a;
 				return _Utils_Tuple2(
@@ -6681,6 +6709,15 @@ var author$project$Main$update = F2(
 					var _n3 = A2(elm$core$Debug$log, 'Error TaskCreated==', err);
 					return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
 				}
+			case 'TaskDeleted':
+				if (msg.a.$ === 'Ok') {
+					var message = msg.a.a;
+					return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
+				} else {
+					var err = msg.a.a;
+					var _n4 = A2(elm$core$Debug$log, 'Error TaskDeleted==', err);
+					return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
+				}
 			case 'GetTasks':
 				return _Utils_Tuple2(model, author$project$Main$getTasksRequest);
 			case 'TasksFetched':
@@ -6693,7 +6730,7 @@ var author$project$Main$update = F2(
 						elm$core$Platform$Cmd$none);
 				} else {
 					var err = msg.a.a;
-					var _n4 = A2(elm$core$Debug$log, 'Error task fecthed===', err);
+					var _n5 = A2(elm$core$Debug$log, 'Error task fecthed===', err);
 					return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
 				}
 			case 'AddComment':
@@ -6702,18 +6739,17 @@ var author$project$Main$update = F2(
 				return _Utils_Tuple2(
 					model,
 					A3(author$project$Main$createCommentRequest, model.user, task, comment));
-			case 'FetchComments':
-				var task = msg.a;
-				return _Utils_Tuple2(
-					model,
-					author$project$Main$getCommentsRequest(task));
 			case 'CommentsFetched':
 				if (msg.a.$ === 'Ok') {
 					var comments = msg.a.a;
-					return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{commentList: comments}),
+						elm$core$Platform$Cmd$none);
 				} else {
 					var err = msg.a.a;
-					var _n5 = A2(elm$core$Debug$log, 'Error CommentsFetched fecthed===', err);
+					var _n6 = A2(elm$core$Debug$log, 'Error CommentsFetched fecthed===', err);
 					return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
 				}
 			case 'CreateComment':
@@ -6730,10 +6766,10 @@ var author$project$Main$update = F2(
 						_Utils_update(
 							model,
 							{renderView: 'Dashboard'}),
-						elm$core$Platform$Cmd$none);
+						author$project$Main$getCommentsRequest(comment.taskId));
 				} else {
 					var err = msg.a.a;
-					var _n6 = A2(elm$core$Debug$log, 'Error CommentCreated fecthed===', err);
+					var _n7 = A2(elm$core$Debug$log, 'Error CommentCreated fecthed===', err);
 					return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
 				}
 			case 'InputCommentText':
@@ -6766,7 +6802,7 @@ var author$project$Main$update = F2(
 						elm$core$Platform$Cmd$none);
 				} else {
 					var err = msg.a.a;
-					var _n7 = A2(elm$core$Debug$log, 'Error users fecthed===', err);
+					var _n8 = A2(elm$core$Debug$log, 'Error users fecthed===', err);
 					return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
 				}
 			case 'InputFilterDueDate':
@@ -6775,7 +6811,19 @@ var author$project$Main$update = F2(
 				var filterValuesUpdated = _Utils_update(
 					filterValues,
 					{due_date: due_date});
-				var _n8 = A2(elm$core$Debug$log, 'InputFilterDueDate ===', due_date);
+				var _n9 = A2(elm$core$Debug$log, 'InputFilterDueDate ===', due_date);
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{filterValues: filterValuesUpdated}),
+					elm$core$Platform$Cmd$none);
+			case 'InputFilterCreateDate':
+				var create_date = msg.a;
+				var filterValues = model.filterValues;
+				var filterValuesUpdated = _Utils_update(
+					filterValues,
+					{create_date: create_date});
+				var _n10 = A2(elm$core$Debug$log, 'InputFilterCreateDate ===', create_date);
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
@@ -6787,7 +6835,7 @@ var author$project$Main$update = F2(
 				var filterValuesUpdated = _Utils_update(
 					filterValues,
 					{titleSearchText: searchText});
-				var _n9 = A2(elm$core$Debug$log, 'InputFilterTitleSearchText ===', searchText);
+				var _n11 = A2(elm$core$Debug$log, 'InputFilterTitleSearchText ===', searchText);
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
@@ -6800,6 +6848,12 @@ var author$project$Main$update = F2(
 						return _Utils_eq(task.due_date, model.filterValues.due_date);
 					},
 					model.taskList);
+				var temp0FilteredTaskList = (model.filterValues.create_date === '') ? tempFilteredTaskList : A2(
+					elm$core$List$filter,
+					function (task) {
+						return _Utils_eq(task.createdOn, model.filterValues.create_date);
+					},
+					tempFilteredTaskList);
 				var temp1FilteredTaskList = (model.filterValues.titleSearchText === '') ? tempFilteredTaskList : A2(
 					elm$core$List$filter,
 					function (task) {
@@ -6808,7 +6862,7 @@ var author$project$Main$update = F2(
 							elm$core$String$toLower(model.filterValues.titleSearchText),
 							elm$core$String$toLower(task.title));
 					},
-					tempFilteredTaskList);
+					temp0FilteredTaskList);
 				var temp2FilteredTaskList = function () {
 					var selectedCreatorList = model.filterValues.selectedCreatorList;
 					var selectedCreatorIdList = A2(
@@ -6839,7 +6893,7 @@ var author$project$Main$update = F2(
 						},
 						temp2FilteredTaskList);
 				}();
-				var _n10 = elm$core$Debug$log('ApplyFilter ===');
+				var _n12 = elm$core$Debug$log('ApplyFilter ===');
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
@@ -6862,12 +6916,12 @@ var author$project$Main$update = F2(
 							task,
 							{showDetails: false});
 					},
-					model.taskList);
+					model.filteredTaskList);
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
-						{taskList: tasks}),
-					author$project$Main$getCommentsRequest(currentTask));
+						{filteredTaskList: tasks}),
+					author$project$Main$getCommentsRequest(currentTask.taskId));
 			case 'ToggleCreatorDropdown':
 				var oldfilterValues = model.filterValues;
 				var newValue = model.filterValues.showCreatorDropdown ? false : true;
@@ -6954,13 +7008,13 @@ var author$project$Main$updateWithStorage = F2(
 	});
 var author$project$Main$CreateTask = {$: 'CreateTask'};
 var author$project$Main$ShowFilterPanel = {$: 'ShowFilterPanel'};
-var author$project$Main$AddComment = F2(
-	function (a, b) {
-		return {$: 'AddComment', a: a, b: b};
-	});
-var author$project$Main$CancelComment = {$: 'CancelComment'};
-var author$project$Main$InputCommentText = function (a) {
-	return {$: 'InputCommentText', a: a};
+var author$project$Main$AddTask = {$: 'AddTask'};
+var author$project$Main$CancelTask = {$: 'CancelTask'};
+var author$project$Main$InputDescription = function (a) {
+	return {$: 'InputDescription', a: a};
+};
+var author$project$Main$InputTask = function (a) {
+	return {$: 'InputTask', a: a};
 };
 var elm$json$Json$Decode$map = _Json_map1;
 var elm$virtual_dom$VirtualDom$toHandlerInt = function (handler) {
@@ -6978,9 +7032,21 @@ var elm$virtual_dom$VirtualDom$toHandlerInt = function (handler) {
 var elm$html$Html$button = _VirtualDom_node('button');
 var elm$html$Html$div = _VirtualDom_node('div');
 var elm$html$Html$h1 = _VirtualDom_node('h1');
+var elm$html$Html$input = _VirtualDom_node('input');
+var elm$html$Html$label = _VirtualDom_node('label');
 var elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
 var elm$html$Html$text = elm$virtual_dom$VirtualDom$text;
 var elm$html$Html$textarea = _VirtualDom_node('textarea');
+var elm$html$Html$Attributes$stringProperty = F2(
+	function (key, string) {
+		return A2(
+			_VirtualDom_property,
+			key,
+			elm$json$Json$Encode$string(string));
+	});
+var elm$html$Html$Attributes$class = elm$html$Html$Attributes$stringProperty('className');
+var elm$html$Html$Attributes$placeholder = elm$html$Html$Attributes$stringProperty('placeholder');
+var elm$html$Html$Attributes$value = elm$html$Html$Attributes$stringProperty('value');
 var elm$virtual_dom$VirtualDom$Normal = function (a) {
 	return {$: 'Normal', a: a};
 };
@@ -7029,69 +7095,6 @@ var elm$html$Html$Events$onInput = function (tagger) {
 			elm$html$Html$Events$alwaysStop,
 			A2(elm$json$Json$Decode$map, tagger, elm$html$Html$Events$targetValue)));
 };
-var author$project$Main$renderCreateCommentView = function (model) {
-	return A2(
-		elm$html$Html$div,
-		_List_Nil,
-		_List_fromArray(
-			[
-				A2(
-				elm$html$Html$h1,
-				_List_Nil,
-				_List_fromArray(
-					[
-						elm$html$Html$text('Create Comments')
-					])),
-				A2(
-				elm$html$Html$textarea,
-				_List_fromArray(
-					[
-						elm$html$Html$Events$onInput(author$project$Main$InputCommentText)
-					]),
-				_List_Nil),
-				A2(
-				elm$html$Html$button,
-				_List_fromArray(
-					[
-						elm$html$Html$Events$onClick(
-						A2(author$project$Main$AddComment, model.currentComment, model.newTask))
-					]),
-				_List_fromArray(
-					[
-						elm$html$Html$text('Create')
-					])),
-				A2(
-				elm$html$Html$button,
-				_List_fromArray(
-					[
-						elm$html$Html$Events$onClick(author$project$Main$CancelComment)
-					]),
-				_List_fromArray(
-					[
-						elm$html$Html$text('Cancel')
-					]))
-			]));
-};
-var author$project$Main$AddTask = {$: 'AddTask'};
-var author$project$Main$CancelTask = {$: 'CancelTask'};
-var author$project$Main$InputDescription = function (a) {
-	return {$: 'InputDescription', a: a};
-};
-var author$project$Main$InputTask = function (a) {
-	return {$: 'InputTask', a: a};
-};
-var elm$html$Html$input = _VirtualDom_node('input');
-var elm$html$Html$label = _VirtualDom_node('label');
-var elm$html$Html$Attributes$stringProperty = F2(
-	function (key, string) {
-		return A2(
-			_VirtualDom_property,
-			key,
-			elm$json$Json$Encode$string(string));
-	});
-var elm$html$Html$Attributes$class = elm$html$Html$Attributes$stringProperty('className');
-var elm$html$Html$Attributes$placeholder = elm$html$Html$Attributes$stringProperty('placeholder');
-var elm$html$Html$Attributes$value = elm$html$Html$Attributes$stringProperty('value');
 var author$project$Main$renderCreateTaskView = function (model) {
 	return A2(
 		elm$html$Html$div,
@@ -7243,8 +7246,8 @@ var author$project$Main$radio = F3(
 					elm$html$Html$text(value)
 				]));
 	});
-var author$project$Main$DeleteIt = function (a) {
-	return {$: 'DeleteIt', a: a};
+var author$project$Main$DeleteTask = function (a) {
+	return {$: 'DeleteTask', a: a};
 };
 var author$project$Main$ShowTaskDetails = function (a) {
 	return {$: 'ShowTaskDetails', a: a};
@@ -7263,9 +7266,6 @@ var author$project$Main$getStatus = function (status) {
 };
 var author$project$Main$CreateComment = function (a) {
 	return {$: 'CreateComment', a: a};
-};
-var author$project$Main$FetchComments = function (a) {
-	return {$: 'FetchComments', a: a};
 };
 var elm$core$List$head = function (list) {
 	if (list.b) {
@@ -7290,9 +7290,109 @@ var author$project$Main$getUserName = F2(
 					users)));
 		return user.name;
 	});
-var elm$html$Html$a = _VirtualDom_node('a');
+var author$project$Main$AddComment = F2(
+	function (a, b) {
+		return {$: 'AddComment', a: a, b: b};
+	});
+var author$project$Main$CancelComment = {$: 'CancelComment'};
+var author$project$Main$InputCommentText = function (a) {
+	return {$: 'InputCommentText', a: a};
+};
+var author$project$Main$renderCreateCommentView = function (model) {
+	return A2(
+		elm$html$Html$div,
+		_List_Nil,
+		_List_fromArray(
+			[
+				A2(
+				elm$html$Html$h1,
+				_List_Nil,
+				_List_fromArray(
+					[
+						elm$html$Html$text('Create Comments')
+					])),
+				A2(
+				elm$html$Html$textarea,
+				_List_fromArray(
+					[
+						elm$html$Html$Events$onInput(author$project$Main$InputCommentText)
+					]),
+				_List_Nil),
+				A2(
+				elm$html$Html$button,
+				_List_fromArray(
+					[
+						elm$html$Html$Events$onClick(
+						A2(author$project$Main$AddComment, model.currentComment, model.newTask))
+					]),
+				_List_fromArray(
+					[
+						elm$html$Html$text('Create')
+					])),
+				A2(
+				elm$html$Html$button,
+				_List_fromArray(
+					[
+						elm$html$Html$Events$onClick(author$project$Main$CancelComment)
+					]),
+				_List_fromArray(
+					[
+						elm$html$Html$text('Cancel')
+					]))
+			]));
+};
+var elm$html$Html$li = _VirtualDom_node('li');
+var elm$html$Html$ol = _VirtualDom_node('ol');
+var author$project$Main$renderTaskComments = function (comments) {
+	return A2(
+		elm$html$Html$ol,
+		_List_Nil,
+		A2(
+			elm$core$List$map,
+			function (comment) {
+				return A2(
+					elm$html$Html$li,
+					_List_Nil,
+					_List_fromArray(
+						[
+							A2(
+							elm$html$Html$div,
+							_List_fromArray(
+								[
+									elm$html$Html$Attributes$class('list-item')
+								]),
+							_List_fromArray(
+								[
+									A2(
+									elm$html$Html$div,
+									_List_fromArray(
+										[
+											elm$html$Html$Attributes$class('list-header')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											elm$html$Html$div,
+											_List_Nil,
+											_List_fromArray(
+												[
+													A2(
+													elm$html$Html$textarea,
+													_List_Nil,
+													_List_fromArray(
+														[
+															elm$html$Html$text(comment.text)
+														]))
+												]))
+										]))
+								]))
+						]));
+			},
+			comments));
+};
 var author$project$Main$renderTaskDetails = F2(
 	function (task, model) {
+		var _n0 = A2(elm$core$Debug$log, 'task details===', task);
 		return A2(
 			elm$html$Html$div,
 			_List_Nil,
@@ -7337,7 +7437,7 @@ var author$project$Main$renderTaskDetails = F2(
 							_List_Nil,
 							_List_fromArray(
 								[
-									elm$html$Html$text('  Created BY: ')
+									elm$html$Html$text('  Created By: ')
 								])),
 							A2(
 							elm$html$Html$label,
@@ -7362,18 +7462,13 @@ var author$project$Main$renderTaskDetails = F2(
 									elm$html$Html$text(task.createdOn)
 								]))
 						])),
-					A2(
-					elm$html$Html$a,
+					(model.renderView === 'CreateComment') ? A2(
+					elm$html$Html$div,
+					_List_Nil,
 					_List_fromArray(
 						[
-							elm$html$Html$Events$onClick(
-							author$project$Main$ShowTaskDetails(task))
-						]),
-					_List_fromArray(
-						[
-							elm$html$Html$text(task.title)
-						])),
-					A2(
+							author$project$Main$renderCreateCommentView(model)
+						])) : A2(
 					elm$html$Html$div,
 					_List_fromArray(
 						[
@@ -7392,24 +7487,11 @@ var author$project$Main$renderTaskDetails = F2(
 							_List_fromArray(
 								[
 									elm$html$Html$text('Add Comment')
-								])),
-							A2(
-							elm$html$Html$button,
-							_List_fromArray(
-								[
-									elm$html$Html$Attributes$class('button'),
-									elm$html$Html$Events$onClick(
-									author$project$Main$FetchComments(task))
-								]),
-							_List_fromArray(
-								[
-									elm$html$Html$text('Show Comments')
 								]))
-						]))
+						])),
+					author$project$Main$renderTaskComments(model.commentList)
 				]));
 	});
-var elm$html$Html$li = _VirtualDom_node('li');
-var elm$html$Html$ol = _VirtualDom_node('ol');
 var author$project$Main$renderList = F2(
 	function (lst, model) {
 		return A2(
@@ -7427,9 +7509,7 @@ var author$project$Main$renderList = F2(
 								elm$html$Html$div,
 								_List_fromArray(
 									[
-										elm$html$Html$Attributes$class('list-item'),
-										elm$html$Html$Events$onClick(
-										author$project$Main$ShowTaskDetails(l))
+										elm$html$Html$Attributes$class('list-item')
 									]),
 								_List_fromArray(
 									[
@@ -7443,7 +7523,11 @@ var author$project$Main$renderList = F2(
 											[
 												A2(
 												elm$html$Html$div,
-												_List_Nil,
+												_List_fromArray(
+													[
+														elm$html$Html$Events$onClick(
+														author$project$Main$ShowTaskDetails(l))
+													]),
 												_List_fromArray(
 													[
 														A2(
@@ -7459,6 +7543,20 @@ var author$project$Main$renderList = F2(
 														_List_fromArray(
 															[
 																elm$html$Html$text(l.title)
+															])),
+														A2(
+														elm$html$Html$label,
+														_List_Nil,
+														_List_fromArray(
+															[
+																elm$html$Html$text('  Description: ')
+															])),
+														A2(
+														elm$html$Html$label,
+														_List_Nil,
+														_List_fromArray(
+															[
+																elm$html$Html$text(l.description)
 															])),
 														A2(
 														elm$html$Html$label,
@@ -7491,24 +7589,15 @@ var author$project$Main$renderList = F2(
 															]))
 													])),
 												A2(
-												elm$html$Html$div,
+												elm$html$Html$button,
 												_List_fromArray(
 													[
-														elm$html$Html$Attributes$class('button-collection')
+														elm$html$Html$Events$onClick(
+														author$project$Main$DeleteTask(l))
 													]),
 												_List_fromArray(
 													[
-														A2(
-														elm$html$Html$button,
-														_List_fromArray(
-															[
-																elm$html$Html$Events$onClick(
-																author$project$Main$DeleteIt(l.taskId))
-															]),
-														_List_fromArray(
-															[
-																elm$html$Html$text('Delete')
-															]))
+														elm$html$Html$text('Delete')
 													])),
 												l.showDetails ? A2(author$project$Main$renderTaskDetails, l, model) : elm$html$Html$text('')
 											]))
@@ -7535,7 +7624,7 @@ var author$project$Main$renderDashboard = function (model) {
 					]),
 				_List_fromArray(
 					[
-						elm$html$Html$text('My Tasks')
+						elm$html$Html$text('My Tasks' + model.renderView)
 					])),
 				A2(
 				elm$html$Html$div,
@@ -7569,6 +7658,9 @@ var author$project$Main$renderDashboard = function (model) {
 };
 var author$project$Main$ApplyFilter = {$: 'ApplyFilter'};
 var author$project$Main$CancelFilter = {$: 'CancelFilter'};
+var author$project$Main$InputFilterCreateDate = function (a) {
+	return {$: 'InputFilterCreateDate', a: a};
+};
 var author$project$Main$InputFilterDueDate = function (a) {
 	return {$: 'InputFilterDueDate', a: a};
 };
@@ -7826,6 +7918,31 @@ var author$project$Main$renderFilterView = function (model) {
 				elm$html$Html$div,
 				_List_fromArray(
 					[
+						elm$html$Html$Attributes$class('fieldset')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						elm$html$Html$label,
+						_List_Nil,
+						_List_fromArray(
+							[
+								elm$html$Html$text('Created On : ')
+							])),
+						A2(
+						elm$html$Html$input,
+						_List_fromArray(
+							[
+								elm$html$Html$Attributes$placeholder(''),
+								elm$html$Html$Events$onInput(author$project$Main$InputFilterCreateDate),
+								elm$html$Html$Attributes$value(model.filterValues.create_date)
+							]),
+						_List_Nil)
+					])),
+				A2(
+				elm$html$Html$div,
+				_List_fromArray(
+					[
 						elm$html$Html$Attributes$class('button-collection')
 					]),
 				_List_fromArray(
@@ -7950,22 +8067,6 @@ var author$project$Main$view = function (model) {
 						_List_fromArray(
 							[
 								author$project$Main$renderCreateTaskView(model)
-							])) : elm$html$Html$text(''),
-						(model.renderView === 'CreateComment') ? A2(
-						elm$html$Html$div,
-						_List_fromArray(
-							[
-								elm$html$Html$Attributes$classList(
-								_List_fromArray(
-									[
-										_Utils_Tuple2('mini-panel', true),
-										_Utils_Tuple2('show', openSidePanel),
-										_Utils_Tuple2('hide', !openSidePanel)
-									]))
-							]),
-						_List_fromArray(
-							[
-								author$project$Main$renderCreateCommentView(model)
 							])) : elm$html$Html$text(''),
 						(model.renderView === 'FilterTasks') ? A2(
 						elm$html$Html$div,
@@ -8256,66 +8357,26 @@ _Platform_export({'Main':{'init':author$project$Main$main(
 																										elm$json$Json$Decode$list(
 																											A2(
 																												elm$json$Json$Decode$andThen,
-																												function (title) {
+																												function (text) {
 																													return A2(
 																														elm$json$Json$Decode$andThen,
 																														function (taskId) {
 																															return A2(
 																																elm$json$Json$Decode$andThen,
-																																function (status) {
+																																function (createdBy) {
 																																	return A2(
 																																		elm$json$Json$Decode$andThen,
-																																		function (showDetails) {
-																																			return A2(
-																																				elm$json$Json$Decode$andThen,
-																																				function (ownerId) {
-																																					return A2(
-																																						elm$json$Json$Decode$andThen,
-																																						function (isTaskDeleted) {
-																																							return A2(
-																																								elm$json$Json$Decode$andThen,
-																																								function (isTaskCompleted) {
-																																									return A2(
-																																										elm$json$Json$Decode$andThen,
-																																										function (due_date) {
-																																											return A2(
-																																												elm$json$Json$Decode$andThen,
-																																												function (description) {
-																																													return A2(
-																																														elm$json$Json$Decode$andThen,
-																																														function (created_by) {
-																																															return A2(
-																																																elm$json$Json$Decode$andThen,
-																																																function (createdOn) {
-																																																	return A2(
-																																																		elm$json$Json$Decode$andThen,
-																																																		function (commentedOn) {
-																																																			return elm$json$Json$Decode$succeed(
-																																																				{commentedOn: commentedOn, createdOn: createdOn, created_by: created_by, description: description, due_date: due_date, isTaskCompleted: isTaskCompleted, isTaskDeleted: isTaskDeleted, ownerId: ownerId, showDetails: showDetails, status: status, taskId: taskId, title: title});
-																																																		},
-																																																		A2(elm$json$Json$Decode$field, 'commentedOn', elm$json$Json$Decode$string));
-																																																},
-																																																A2(elm$json$Json$Decode$field, 'createdOn', elm$json$Json$Decode$string));
-																																														},
-																																														A2(elm$json$Json$Decode$field, 'created_by', elm$json$Json$Decode$int));
-																																												},
-																																												A2(elm$json$Json$Decode$field, 'description', elm$json$Json$Decode$string));
-																																										},
-																																										A2(elm$json$Json$Decode$field, 'due_date', elm$json$Json$Decode$string));
-																																								},
-																																								A2(elm$json$Json$Decode$field, 'isTaskCompleted', elm$json$Json$Decode$bool));
-																																						},
-																																						A2(elm$json$Json$Decode$field, 'isTaskDeleted', elm$json$Json$Decode$bool));
-																																				},
-																																				A2(elm$json$Json$Decode$field, 'ownerId', elm$json$Json$Decode$int));
+																																		function (commentId) {
+																																			return elm$json$Json$Decode$succeed(
+																																				{commentId: commentId, createdBy: createdBy, taskId: taskId, text: text});
 																																		},
-																																		A2(elm$json$Json$Decode$field, 'showDetails', elm$json$Json$Decode$bool));
+																																		A2(elm$json$Json$Decode$field, 'commentId', elm$json$Json$Decode$int));
 																																},
-																																A2(elm$json$Json$Decode$field, 'status', elm$json$Json$Decode$int));
+																																A2(elm$json$Json$Decode$field, 'createdBy', elm$json$Json$Decode$int));
 																														},
 																														A2(elm$json$Json$Decode$field, 'taskId', elm$json$Json$Decode$int));
 																												},
-																												A2(elm$json$Json$Decode$field, 'title', elm$json$Json$Decode$string)))));
+																												A2(elm$json$Json$Decode$field, 'text', elm$json$Json$Decode$string)))));
 																							},
 																							A2(
 																								elm$json$Json$Decode$field,
@@ -8367,8 +8428,13 @@ _Platform_export({'Main':{'init':author$project$Main$main(
 																																		return A2(
 																																			elm$json$Json$Decode$andThen,
 																																			function (createdBy) {
-																																				return elm$json$Json$Decode$succeed(
-																																					{createdBy: createdBy, due_date: due_date, selectedCreatorList: selectedCreatorList, selectedOwnerList: selectedOwnerList, showCreatorDropdown: showCreatorDropdown, showOwnerDropdown: showOwnerDropdown, titleSearchText: titleSearchText});
+																																				return A2(
+																																					elm$json$Json$Decode$andThen,
+																																					function (create_date) {
+																																						return elm$json$Json$Decode$succeed(
+																																							{create_date: create_date, createdBy: createdBy, due_date: due_date, selectedCreatorList: selectedCreatorList, selectedOwnerList: selectedOwnerList, showCreatorDropdown: showCreatorDropdown, showOwnerDropdown: showOwnerDropdown, titleSearchText: titleSearchText});
+																																					},
+																																					A2(elm$json$Json$Decode$field, 'create_date', elm$json$Json$Decode$string));
 																																			},
 																																			A2(elm$json$Json$Decode$field, 'createdBy', elm$json$Json$Decode$int));
 																																	},
