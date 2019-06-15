@@ -6017,7 +6017,7 @@ var elm$http$Http$get = function (r) {
 var author$project$Main$getTasksRequest = elm$http$Http$get(
 	{
 		expect: A2(elm$http$Http$expectJson, author$project$Main$TasksFetched, author$project$Main$taskListDecoder),
-		url: 'http://localhost:9999/task-bucket-api/tasks'
+		url: 'http://172.15.3.11:9999/task-bucket-api/tasks'
 	});
 var author$project$Main$UsersFetched = function (a) {
 	return {$: 'UsersFetched', a: a};
@@ -6044,7 +6044,7 @@ var author$project$Main$userListDecoder = elm$json$Json$Decode$list(author$proje
 var author$project$Main$getUsersRequest = elm$http$Http$get(
 	{
 		expect: A2(elm$http$Http$expectJson, author$project$Main$UsersFetched, author$project$Main$userListDecoder),
-		url: 'http://localhost:9999/task-bucket-api/users'
+		url: 'http://172.15.3.11:9999/task-bucket-api/users'
 	});
 var elm$core$Maybe$withDefault = F2(
 	function (_default, maybe) {
@@ -6275,7 +6275,7 @@ var author$project$Main$CommentCreated = function (a) {
 };
 var author$project$Main$commentDecoder = A4(
 	NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
-	'createdBy',
+	'created_by',
 	elm$json$Json$Decode$int,
 	1,
 	A4(
@@ -6285,11 +6285,11 @@ var author$project$Main$commentDecoder = A4(
 		'',
 		A3(
 			NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-			'taskId',
+			'task_id',
 			elm$json$Json$Decode$int,
 			A3(
 				NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-				'commentId',
+				'id',
 				elm$json$Json$Decode$int,
 				elm$json$Json$Decode$succeed(author$project$Main$Comment)))));
 var author$project$Main$createCommentEncoder = F3(
@@ -6325,7 +6325,7 @@ var author$project$Main$createCommentRequest = F3(
 				body: elm$http$Http$jsonBody(
 					A3(author$project$Main$createCommentEncoder, user, task, comment)),
 				expect: A2(elm$http$Http$expectJson, author$project$Main$CommentCreated, author$project$Main$commentDecoder),
-				url: 'http://localhost:9999/task-bucket-api/tasks/' + (elm$core$String$fromInt(task.taskId) + '/comments')
+				url: 'http://172.15.3.11:9999/task-bucket-api/tasks/' + (elm$core$String$fromInt(task.taskId) + '/comments')
 			});
 	});
 var author$project$Main$TaskCreated = function (a) {
@@ -6363,18 +6363,18 @@ var author$project$Main$createTaskRequest = function (task) {
 			body: elm$http$Http$jsonBody(
 				author$project$Main$newTaskEncoder(task)),
 			expect: A2(elm$http$Http$expectJson, author$project$Main$TaskCreated, author$project$Main$taskDecoder),
-			url: 'http://localhost:9999/task-bucket-api/tasks'
+			url: 'http://172.15.3.11:9999/task-bucket-api/tasks'
 		});
 };
 var author$project$Main$CommentsFetched = function (a) {
 	return {$: 'CommentsFetched', a: a};
 };
 var author$project$Main$commentListDecoder = elm$json$Json$Decode$list(author$project$Main$commentDecoder);
-var author$project$Main$getCommentsRequest = function (task) {
+var author$project$Main$getCommentsRequest = function (taskId) {
 	return elm$http$Http$get(
 		{
 			expect: A2(elm$http$Http$expectJson, author$project$Main$CommentsFetched, author$project$Main$commentListDecoder),
-			url: 'http://localhost:9999/task-bucket-api/tasks/' + (elm$core$String$fromInt(task.taskId) + '/comments')
+			url: 'http://172.15.3.11:9999/task-bucket-api/tasks/' + (elm$core$String$fromInt(taskId) + '/comments')
 		});
 };
 var elm$core$Basics$neq = _Utils_notEqual;
@@ -6553,7 +6553,7 @@ var author$project$Main$update = F2(
 						_Utils_update(
 							model,
 							{renderView: 'Dashboard'}),
-						elm$core$Platform$Cmd$none);
+						author$project$Main$getCommentsRequest(comment.taskId));
 				} else {
 					var err = msg.a.a;
 					var _n5 = A2(elm$core$Debug$log, 'Error CommentCreated fecthed===', err);
@@ -6608,7 +6608,7 @@ var author$project$Main$update = F2(
 					_Utils_update(
 						model,
 						{taskList: tasks}),
-					author$project$Main$getCommentsRequest(currentTask));
+					author$project$Main$getCommentsRequest(currentTask.taskId));
 		}
 	});
 var author$project$Main$updateWithStorage = F2(

@@ -264,7 +264,7 @@ update msg model =
          ({model | renderView = "CreateComment", newTask = task}, Cmd.none )
 
         CommentCreated (Ok comment) ->
-            ( {model | renderView ="Dashboard" }, Cmd.none )
+            ( {model | renderView ="Dashboard" }, getCommentsRequest comment.taskId )
 
         CommentCreated (Err err) ->
           let
@@ -296,7 +296,7 @@ update msg model =
             tasks = model.taskList
                       |> List.map (\task -> if task.taskId == currentTask.taskId then {task | showDetails = True} else {task | showDetails = False} )
           in
-           ({model | taskList = tasks}, getCommentsRequest currentTask)
+           ({model | taskList = tasks}, getCommentsRequest currentTask.taskId)
 
 
 keep : String -> List Task -> List Task
@@ -470,7 +470,7 @@ renderCreateTaskView model =
 createTaskRequest : Task -> Cmd Msg
 createTaskRequest task =
     Http.post
-        { url = "http://localhost:9999/task-bucket-api/tasks"
+        { url = "http://172.15.3.11:9999/task-bucket-api/tasks"
         , body = Http.jsonBody (newTaskEncoder task)
         , expect = Http.expectJson TaskCreated taskDecoder
         --, timeout = Nothing
@@ -479,7 +479,7 @@ createTaskRequest task =
 getTasksRequest : Cmd Msg
 getTasksRequest =
   Http.get
-      { url = "http://localhost:9999/task-bucket-api/tasks"
+      { url = "http://172.15.3.11:9999/task-bucket-api/tasks"
       , expect = Http.expectJson TasksFetched taskListDecoder
       --, timeout = Nothing
       --, withCredentials = False
@@ -529,7 +529,7 @@ defaultComment  user task =
 createCommentRequest : User -> Task -> Comment -> Cmd Msg
 createCommentRequest user task comment =
    Http.post
-       { url = "http://localhost:9999/task-bucket-api/tasks/"++ String.fromInt(task.taskId) ++"/comments"
+       { url = "http://172.15.3.11:9999/task-bucket-api/tasks/"++ String.fromInt(task.taskId) ++"/comments"
        , body = Http.jsonBody (createCommentEncoder user task comment)
        , expect = Http.expectJson CommentCreated commentDecoder
        }
@@ -545,17 +545,17 @@ createCommentEncoder user task comment=
 commentDecoder : Json.Decoder Comment
 commentDecoder =
    Json.succeed Comment
-       |> required "commentId" Json.int
-       |> required "taskId" Json.int
+       |> required "id" Json.int
+       |> required "task_id" Json.int
        |> optional "text" Json.string ""
-       |> optional "createdBy" Json.int 1
+       |> optional "created_by" Json.int 1
 
 
-getCommentsRequest : Task -> Cmd Msg
-getCommentsRequest task =
+getCommentsRequest : Int -> Cmd Msg
+getCommentsRequest taskId =
  Http.get
      {
-     url = "http://localhost:9999/task-bucket-api/tasks/" ++ String.fromInt(task.taskId) ++"/comments"
+     url = "http://172.15.3.11:9999/task-bucket-api/tasks/" ++ String.fromInt(taskId) ++"/comments"
      , expect = Http.expectJson CommentsFetched commentListDecoder
      }
 
@@ -584,7 +584,7 @@ userDecoder =
 getUsersRequest : Cmd Msg
 getUsersRequest =
  Http.get
-     { url = "http://localhost:9999/task-bucket-api/users"
+     { url = "http://172.15.3.11:9999/task-bucket-api/users"
      , expect = Http.expectJson UsersFetched userListDecoder
      }
 
