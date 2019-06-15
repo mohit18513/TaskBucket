@@ -6894,7 +6894,12 @@ var author$project$Main$update = F2(
 						_Utils_update(
 							model,
 							{renderView: 'Dashboard'}),
-						author$project$Main$getCommentsRequest(comment.taskId));
+						elm$core$Platform$Cmd$batch(
+							_List_fromArray(
+								[
+									author$project$Main$getTasksRequest,
+									author$project$Main$getCommentsRequest(comment.taskId)
+								])));
 				} else {
 					var err = msg.a.a;
 					var _n9 = A2(elm$core$Debug$log, 'Error CommentCreated fecthed===', err);
