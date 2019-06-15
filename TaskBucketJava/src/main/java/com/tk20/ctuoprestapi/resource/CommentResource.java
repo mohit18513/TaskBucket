@@ -4,10 +4,12 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
 
 import javax.sql.DataSource;
+
+import main.java.com.ExceptionHandlers.ApplicationException;
+import main.java.com.tk20.Entities.Comment;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -21,9 +23,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.google.common.base.Throwables;
 
-import main.java.com.ExceptionHandlers.ApplicationException;
-import main.java.com.tk20.Entities.Comment;
-
 @RestController
 @RequestMapping(path = "/task-bucket-api/tasks/{task_id}/comments")
 public class CommentResource {
@@ -33,9 +32,9 @@ public class CommentResource {
 
 	@CrossOrigin(origins = "*")
 	@GetMapping("")
-	public Set<Comment> getComments(@PathVariable int task_id) {
+	public ArrayList<Comment> getComments(@PathVariable int task_id) {
 		ResultSet commentCursor = null;
-		Set<Comment> comments = new HashSet<>();
+		ArrayList<Comment> comments = new ArrayList<>();
 		ResultSet assessorCursor = null;
 		try (Connection con = dataSource.getConnection()) {
 			String commentQuery = "SELECT * FROM comments WHERE task_id=? order by createtime desc;";
