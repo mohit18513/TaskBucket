@@ -146,7 +146,7 @@ emptyTask =
     , created_by = 1
     , ownerId = 1
     , status = 0
-    , due_date = "2019-06-10"
+    , due_date = ""
     , createdOn = ""
     , commentedOn = ""
     , isTaskDeleted = False
@@ -170,8 +170,9 @@ type Msg
     = AddTask
     | CreateTask
     | ShowFilterPanel
-    | InputTask String
+    | InputTaskTitle String
     | InputDescription String
+    | InputTaskDueDate String
     | CancelTask
     | DeleteIt Int
     | MarkItCompleted Int
@@ -231,7 +232,7 @@ update msg model =
             _ = Debug.log "showFilterPanel==" ""
           in
             ({model | renderView = "FilterTasks"}, Cmd.none )
-        InputTask title ->
+        InputTaskTitle title ->
           let
             task = model.newTask
             newTask = {task | title = title}
@@ -241,6 +242,12 @@ update msg model =
           let
             task = model.newTask
             newTask = {task | description = description}
+          in
+            ({model | newTask = newTask}, Cmd.none)
+        InputTaskDueDate due_date ->
+          let
+            task = model.newTask
+            newTask = {task | due_date = due_date}
           in
             ({model | newTask = newTask}, Cmd.none)
         CancelTask ->
@@ -632,8 +639,8 @@ renderCreateTaskView model =
   div []
       [ h1 [] [ text "Create New Task" ]
       , div[class "fieldset"][label [] [text "Want to track a task? Add here!"]
-      , input [  placeholder "Want to track a task? Add here!"
-              , onInput InputTask
+      , input [  placeholder "Title"
+              , onInput InputTaskTitle
               , value model.newTask.title
               ]
               []]
@@ -642,6 +649,12 @@ renderCreateTaskView model =
               ]
               []
               ]
+      , div[class "fieldset"][label [] [text "Due Date"]
+      , input [  placeholder "YYYY-MM-DD"
+              , onInput InputTaskDueDate
+              , value model.newTask.due_date
+              ]
+              []]
       ,div[class "button-collection"][ button [ class "primary", onClick AddTask ] [text "Create"]
       , button [ onClick CancelTask ] [text "Cancel"]]
       ]
@@ -652,7 +665,7 @@ renderFilterView model =
       [ h1 [] [ text "Filter Tasks" ]
       , div[class "fieldset"][label [] [text "Title : "]
       , input [  placeholder ""
-              , onInput InputFilterTitleSearchText  -- InputTask
+              , onInput InputFilterTitleSearchText
               , value model.filterValues.titleSearchText
               ]
               []]
@@ -661,19 +674,19 @@ renderFilterView model =
 
       , div[class "fieldset"][label [] [text "Due On : "]
       , input [ placeholder "YYYY-MM-DD"
-              , onInput InputFilterDueDate  -- InputTask
+              , onInput InputFilterDueDate
               , value model.filterValues.due_date
               ]
               []]
       , div[class "fieldset"][label [] [text "Created On : "]
       , input [ placeholder "YYYY-MM-DD"
-              , onInput InputFilterCreateDate  -- InputTask
+              , onInput InputFilterCreateDate
               , value model.filterValues.create_date
               ]
               []]
       , div[class "fieldset"][label [] [text "Last Comment On : "]
       , input [ placeholder "YYYY-MM-DD"
-              , onInput InputFilterLastCommentDate  -- InputTask
+              , onInput InputFilterLastCommentDate
               , value model.filterValues.last_comment_date
               ]
               []]
