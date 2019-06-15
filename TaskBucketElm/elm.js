@@ -4494,7 +4494,7 @@ var author$project$Main$defaultComment = F2(
 		return A4(author$project$Main$Comment, 0, task.taskId, task.title, user.id);
 	});
 var elm$core$Basics$False = {$: 'False'};
-var author$project$Main$emptyTask = {commentedOn: '', createdOn: '', created_by: 1, description: '', due_date: '2019-06-10', isTaskCompleted: false, isTaskDeleted: false, ownerId: 1, showDetails: false, status: 0, taskId: 1, title: ''};
+var author$project$Main$emptyTask = {commentedOn: '', createdOn: '', created_by: 1, description: '', due_date: '', isTaskCompleted: false, isTaskDeleted: false, ownerId: 1, showDetails: false, status: 0, taskId: 1, title: ''};
 var author$project$Main$emptyUser = {email: 'mjindal', id: 1, name: 'Mohit'};
 var elm$core$Basics$EQ = {$: 'EQ'};
 var elm$core$Basics$LT = {$: 'LT'};
@@ -4579,7 +4579,7 @@ var elm$core$Set$toList = function (_n0) {
 var author$project$Main$emptyModel = {
 	commentList: _List_Nil,
 	currentComment: A2(author$project$Main$defaultComment, author$project$Main$emptyUser, author$project$Main$emptyTask),
-	filterValues: {create_date: '2019-6-15', createdBy: 1, due_date: '2019-06-15', selectedCreatorList: _List_Nil, selectedOwnerList: _List_Nil, showCreatorDropdown: false, showOwnerDropdown: false, titleSearchText: ''},
+	filterValues: {create_date: '', createdBy: 1, due_date: '', last_comment_date: '', selectedCreatorList: _List_Nil, selectedOwnerList: _List_Nil, showCreatorDropdown: false, showOwnerDropdown: false, titleSearchText: ''},
 	filteredTaskList: _List_Nil,
 	newTask: author$project$Main$emptyTask,
 	renderView: 'Dashboard',
@@ -6156,6 +6156,9 @@ var author$project$Main$setStorage = _Platform_outgoingPort(
 									'due_date',
 									elm$json$Json$Encode$string($.due_date)),
 									_Utils_Tuple2(
+									'last_comment_date',
+									elm$json$Json$Encode$string($.last_comment_date)),
+									_Utils_Tuple2(
 									'selectedCreatorList',
 									elm$json$Json$Encode$list(
 										function ($) {
@@ -6625,7 +6628,7 @@ var author$project$Main$update = F2(
 						model,
 						{renderView: 'FilterTasks'}),
 					elm$core$Platform$Cmd$none);
-			case 'InputTask':
+			case 'InputTaskTitle':
 				var title = msg.a;
 				var task = model.newTask;
 				var newTask = _Utils_update(
@@ -6642,6 +6645,17 @@ var author$project$Main$update = F2(
 				var newTask = _Utils_update(
 					task,
 					{description: description});
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{newTask: newTask}),
+					elm$core$Platform$Cmd$none);
+			case 'InputTaskDueDate':
+				var due_date = msg.a;
+				var task = model.newTask;
+				var newTask = _Utils_update(
+					task,
+					{due_date: due_date});
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
@@ -6829,13 +6843,25 @@ var author$project$Main$update = F2(
 						model,
 						{filterValues: filterValuesUpdated}),
 					elm$core$Platform$Cmd$none);
+			case 'InputFilterLastCommentDate':
+				var last_comment_date = msg.a;
+				var filterValues = model.filterValues;
+				var filterValuesUpdated = _Utils_update(
+					filterValues,
+					{last_comment_date: last_comment_date});
+				var _n11 = A2(elm$core$Debug$log, 'InputFilterLastCommentDate ===', last_comment_date);
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{filterValues: filterValuesUpdated}),
+					elm$core$Platform$Cmd$none);
 			case 'InputFilterTitleSearchText':
 				var searchText = msg.a;
 				var filterValues = model.filterValues;
 				var filterValuesUpdated = _Utils_update(
 					filterValues,
 					{titleSearchText: searchText});
-				var _n11 = A2(elm$core$Debug$log, 'InputFilterTitleSearchText ===', searchText);
+				var _n12 = A2(elm$core$Debug$log, 'InputFilterTitleSearchText ===', searchText);
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
@@ -6851,7 +6877,7 @@ var author$project$Main$update = F2(
 				var temp0FilteredTaskList = (model.filterValues.create_date === '') ? tempFilteredTaskList : A2(
 					elm$core$List$filter,
 					function (task) {
-						return _Utils_eq(task.createdOn, model.filterValues.create_date);
+						return A2(elm$core$String$contains, model.filterValues.create_date, task.createdOn);
 					},
 					tempFilteredTaskList);
 				var temp1FilteredTaskList = (model.filterValues.titleSearchText === '') ? tempFilteredTaskList : A2(
@@ -6893,17 +6919,23 @@ var author$project$Main$update = F2(
 						},
 						temp2FilteredTaskList);
 				}();
-				var _n12 = elm$core$Debug$log('ApplyFilter ===');
+				var temp4FilteredTaskList = (model.filterValues.last_comment_date === '') ? temp3FilteredTaskList : A2(
+					elm$core$List$filter,
+					function (task) {
+						return A2(elm$core$String$contains, model.filterValues.last_comment_date, task.commentedOn);
+					},
+					temp3FilteredTaskList);
+				var _n13 = elm$core$Debug$log('ApplyFilter ===');
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
-						{filteredTaskList: temp3FilteredTaskList}),
+						{filteredTaskList: temp4FilteredTaskList}),
 					elm$core$Platform$Cmd$none);
 			case 'CancelFilter':
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
-						{filteredTaskList: model.taskList, renderView: 'Dashboard'}),
+						{filterValues: author$project$Main$emptyModel.filterValues, filteredTaskList: model.taskList, renderView: 'Dashboard'}),
 					elm$core$Platform$Cmd$none);
 			case 'ShowTaskDetails':
 				var currentTask = msg.a;
@@ -7013,8 +7045,11 @@ var author$project$Main$CancelTask = {$: 'CancelTask'};
 var author$project$Main$InputDescription = function (a) {
 	return {$: 'InputDescription', a: a};
 };
-var author$project$Main$InputTask = function (a) {
-	return {$: 'InputTask', a: a};
+var author$project$Main$InputTaskDueDate = function (a) {
+	return {$: 'InputTaskDueDate', a: a};
+};
+var author$project$Main$InputTaskTitle = function (a) {
+	return {$: 'InputTaskTitle', a: a};
 };
 var elm$json$Json$Decode$map = _Json_map1;
 var elm$virtual_dom$VirtualDom$toHandlerInt = function (handler) {
@@ -7127,8 +7162,8 @@ var author$project$Main$renderCreateTaskView = function (model) {
 						elm$html$Html$input,
 						_List_fromArray(
 							[
-								elm$html$Html$Attributes$placeholder('Want to track a task? Add here!'),
-								elm$html$Html$Events$onInput(author$project$Main$InputTask),
+								elm$html$Html$Attributes$placeholder('Title'),
+								elm$html$Html$Events$onInput(author$project$Main$InputTaskTitle),
 								elm$html$Html$Attributes$value(model.newTask.title)
 							]),
 						_List_Nil)
@@ -7154,6 +7189,31 @@ var author$project$Main$renderCreateTaskView = function (model) {
 							[
 								elm$html$Html$Events$onInput(author$project$Main$InputDescription),
 								elm$html$Html$Attributes$value(model.newTask.description)
+							]),
+						_List_Nil)
+					])),
+				A2(
+				elm$html$Html$div,
+				_List_fromArray(
+					[
+						elm$html$Html$Attributes$class('fieldset')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						elm$html$Html$label,
+						_List_Nil,
+						_List_fromArray(
+							[
+								elm$html$Html$text('Due Date')
+							])),
+						A2(
+						elm$html$Html$input,
+						_List_fromArray(
+							[
+								elm$html$Html$Attributes$placeholder('YYYY-MM-DD'),
+								elm$html$Html$Events$onInput(author$project$Main$InputTaskDueDate),
+								elm$html$Html$Attributes$value(model.newTask.due_date)
 							]),
 						_List_Nil)
 					])),
@@ -7664,6 +7724,9 @@ var author$project$Main$InputFilterCreateDate = function (a) {
 var author$project$Main$InputFilterDueDate = function (a) {
 	return {$: 'InputFilterDueDate', a: a};
 };
+var author$project$Main$InputFilterLastCommentDate = function (a) {
+	return {$: 'InputFilterLastCommentDate', a: a};
+};
 var author$project$Main$InputFilterTitleSearchText = function (a) {
 	return {$: 'InputFilterTitleSearchText', a: a};
 };
@@ -7908,7 +7971,7 @@ var author$project$Main$renderFilterView = function (model) {
 						elm$html$Html$input,
 						_List_fromArray(
 							[
-								elm$html$Html$Attributes$placeholder(''),
+								elm$html$Html$Attributes$placeholder('YYYY-MM-DD'),
 								elm$html$Html$Events$onInput(author$project$Main$InputFilterDueDate),
 								elm$html$Html$Attributes$value(model.filterValues.due_date)
 							]),
@@ -7933,9 +7996,34 @@ var author$project$Main$renderFilterView = function (model) {
 						elm$html$Html$input,
 						_List_fromArray(
 							[
-								elm$html$Html$Attributes$placeholder(''),
+								elm$html$Html$Attributes$placeholder('YYYY-MM-DD'),
 								elm$html$Html$Events$onInput(author$project$Main$InputFilterCreateDate),
 								elm$html$Html$Attributes$value(model.filterValues.create_date)
+							]),
+						_List_Nil)
+					])),
+				A2(
+				elm$html$Html$div,
+				_List_fromArray(
+					[
+						elm$html$Html$Attributes$class('fieldset')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						elm$html$Html$label,
+						_List_Nil,
+						_List_fromArray(
+							[
+								elm$html$Html$text('Last Comment On : ')
+							])),
+						A2(
+						elm$html$Html$input,
+						_List_fromArray(
+							[
+								elm$html$Html$Attributes$placeholder('YYYY-MM-DD'),
+								elm$html$Html$Events$onInput(author$project$Main$InputFilterLastCommentDate),
+								elm$html$Html$Attributes$value(model.filterValues.last_comment_date)
 							]),
 						_List_Nil)
 					])),
@@ -8424,21 +8512,26 @@ _Platform_export({'Main':{'init':author$project$Main$main(
 																															function (selectedCreatorList) {
 																																return A2(
 																																	elm$json$Json$Decode$andThen,
-																																	function (due_date) {
+																																	function (last_comment_date) {
 																																		return A2(
 																																			elm$json$Json$Decode$andThen,
-																																			function (createdBy) {
+																																			function (due_date) {
 																																				return A2(
 																																					elm$json$Json$Decode$andThen,
-																																					function (create_date) {
-																																						return elm$json$Json$Decode$succeed(
-																																							{create_date: create_date, createdBy: createdBy, due_date: due_date, selectedCreatorList: selectedCreatorList, selectedOwnerList: selectedOwnerList, showCreatorDropdown: showCreatorDropdown, showOwnerDropdown: showOwnerDropdown, titleSearchText: titleSearchText});
+																																					function (createdBy) {
+																																						return A2(
+																																							elm$json$Json$Decode$andThen,
+																																							function (create_date) {
+																																								return elm$json$Json$Decode$succeed(
+																																									{create_date: create_date, createdBy: createdBy, due_date: due_date, last_comment_date: last_comment_date, selectedCreatorList: selectedCreatorList, selectedOwnerList: selectedOwnerList, showCreatorDropdown: showCreatorDropdown, showOwnerDropdown: showOwnerDropdown, titleSearchText: titleSearchText});
+																																							},
+																																							A2(elm$json$Json$Decode$field, 'create_date', elm$json$Json$Decode$string));
 																																					},
-																																					A2(elm$json$Json$Decode$field, 'create_date', elm$json$Json$Decode$string));
+																																					A2(elm$json$Json$Decode$field, 'createdBy', elm$json$Json$Decode$int));
 																																			},
-																																			A2(elm$json$Json$Decode$field, 'createdBy', elm$json$Json$Decode$int));
+																																			A2(elm$json$Json$Decode$field, 'due_date', elm$json$Json$Decode$string));
 																																	},
-																																	A2(elm$json$Json$Decode$field, 'due_date', elm$json$Json$Decode$string));
+																																	A2(elm$json$Json$Decode$field, 'last_comment_date', elm$json$Json$Decode$string));
 																															},
 																															A2(
 																																elm$json$Json$Decode$field,
