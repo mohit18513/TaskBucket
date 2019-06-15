@@ -6609,6 +6609,20 @@ var elm$core$List$head = function (list) {
 		return elm$core$Maybe$Nothing;
 	}
 };
+var author$project$Main$getUserId = F2(
+	function (users, email) {
+		var user = A2(
+			elm$core$Maybe$withDefault,
+			author$project$Main$emptyUser,
+			elm$core$List$head(
+				A2(
+					elm$core$List$filter,
+					function (u) {
+						return _Utils_eq(u.email, email);
+					},
+					users)));
+		return user.id;
+	});
 var author$project$Main$getUserName = F2(
 	function (users, id) {
 		var user = A2(
@@ -7035,7 +7049,10 @@ var author$project$Main$update = F2(
 				var comment = model.currentComment;
 				var newComment = _Utils_update(
 					comment,
-					{text: description});
+					{
+						createdBy: A2(author$project$Main$getUserId, model.userList, model.loginUser.userEmail),
+						text: description
+					});
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,

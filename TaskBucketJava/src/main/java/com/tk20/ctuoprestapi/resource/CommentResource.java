@@ -163,13 +163,13 @@ public class CommentResource {
 				if (pstmt3 != null)
 					pstmt3.close();
 
-				if (!emailSet.isEmpty()) {
+				if (!emailSet.isEmpty())
 					emailSet.remove(userEmail);
+				if (!emailSet.isEmpty())
 					SendEmail.send(emailBody, emailSet,
 							"support@taskbucket.in",
 							"A new comment has been logged on your task - "
 									+ taskTitle);
-				}
 			} catch (SQLException e) {
 				System.out.println(e.getMessage());
 				throw new ApplicationException(
