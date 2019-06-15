@@ -47,7 +47,7 @@ main =
 
 init : Maybe Model -> ( Model, Cmd Msg )
 init maybeModel =
-  ( Maybe.withDefault emptyModel (Just emptyModel)
+  ( Maybe.withDefault emptyModel maybeModel
   , Cmd.batch [ getTasksRequest, getUsersRequest ]
   )
 --
@@ -80,6 +80,10 @@ type alias User =
   , name : String
   , email : String
   }
+type alias LoginUser =
+  { userEmail : String
+  , userPassword : String
+  }
 
 type alias ID =
     { id : Int
@@ -101,6 +105,7 @@ type alias Model =
     , currentComment : Comment
     , commentList : List Comment
     , filterValues : FilterValues
+    , loginUser : LoginUser
     }
 
 type alias Comment =
@@ -144,6 +149,7 @@ emptyModel =
                         , showOwnerDropdown = False
                         , selectedOwnerList = []
                       }
+      , loginUser = emptyLoginUser
     }
 
 emptyTask : Task
@@ -162,11 +168,18 @@ emptyTask =
     , showDetails = False
     }
 
+
 emptyUser: User
 emptyUser =
   { id = 1
   , name = "Mohit"
   , email = "mjindal"
+  }
+
+emptyLoginUser: LoginUser
+emptyLoginUser =
+  { userEmail = ""
+  , userPassword = ""
   }
 
 
@@ -207,6 +220,11 @@ type Msg
     | FilterCreatorRecord User
     | ToggleOwnerDropdown
     | FilterOwnerRecord User
+    | EnterUseEmail String
+    | EnterUserPassword String
+    | Login
+    | UserLoggedIn (Result Http.Error User)
+    | LogOut
 --type Visibility1 = All | OutStanding | Completed
 port setStorage : Model -> Cmd msg
 
@@ -500,6 +518,33 @@ update msg model =
            in
             ( { model | filterValues = newfilterValues } ,Cmd.none)
 
+        EnterUseEmail userEmail ->
+          let
+            loginUser = model.loginUser
+            updatedLoginUser = {loginUser | userEmail = userEmail}
+          in
+            ({model | loginUser = updatedLoginUser}, Cmd.none)
+        EnterUserPassword userPassword ->
+          let
+            loginUser = model.loginUser
+            updatedLoginUser = {loginUser | userPassword = userPassword}
+          in
+            ({model | loginUser = updatedLoginUser}, Cmd.none)
+        Login ->
+          (model, logInUserRequest model.loginUser)
+        UserLoggedIn  (Ok user) ->
+            ( {model | user = user}, Cmd.none )
+
+        UserLoggedIn (Err err) ->
+          let
+            _ = Debug.log "Error UserLoggedIn===" err
+          in
+            ( model, Cmd.none )
+        LogOut ->
+            ({model | loginUser = emptyLoginUser, user = emptyUser}, Cmd.none)
+
+
+
 
 
 
@@ -546,14 +591,14 @@ renderList lst model =
             lst
         )
 
-renderTaskComments: List Comment -> Html msg
-renderTaskComments comments =
+renderTaskComments: List Comment -> List User-> Html msg
+renderTaskComments comments userList =
     ol []
         (List.map
             (\comment ->
                 li [  ]
                    [ div [class "list-item"]
-                           [ div [class "list-header"][div[][textarea [] [text comment.text]]]
+                           [ div [class "list-header"][div[][textarea [] [text comment.text], div [] [label [][text "Added By: "], label [][text (getUserName userList  comment.createdBy)]]]]
                            ]
                     ]
             )
@@ -580,7 +625,7 @@ renderTaskDetails task model =
            --, div[class "button-collection"][button [ onClick (DeleteTask task.taskId)] [text "Delete"]
            --, button [ class "button", onClick (AddComment (defaultComment model.user l))][text "Add Comment"]]
            , if model.renderView == "CreateComment" then div [ ][ renderCreateCommentView model ] else div [class "button-collection"][button [ class "button", onClick (CreateComment task) ][text "Add Comment"]]
-           , renderTaskComments model.commentList  --button [ class "button", onClick (FetchComments task)][text "Show Comments"]
+           , renderTaskComments model.commentList model.userList  --button [ class "button", onClick (FetchComments task)][text "Show Comments"]
            ]
            -- ,div[class "body"][
            --   text "body here"
@@ -613,27 +658,48 @@ view model =
           True
         _ ->
           False
+    isUserNotLoggedIn = model.user == emptyUser
   in
-  div[][
-    div[class "header"][
-    h1 [class "headerStyle"] [ text "Dashboard" ]
-    , button [ onClick CreateTask ] [text "Create Task"]
-    , button [ onClick ShowFilterPanel ] [text "Filter Tasks"]
-    ]
-    ,div [class "panel"]
-      [
-      renderDashboard model
-      , if model.renderView == "CreateTask" then div [ classList [( "mini-panel", True), ("show", openSidePanel),  ("hide", not openSidePanel)] ][ renderCreateTaskView model ] else text ""
-      , if model.renderView == "FilterTasks" then div [ classList [( "mini-panel", True), ("show", openSidePanel), ("hide", not openSidePanel)] ][ renderFilterView model ] else text ""
+    if isUserNotLoggedIn then loginView model else div [][
+      div [class "header"][
+      h1 [class "headerStyle"] [ text "Dashboard" ]
+      , button [ onClick CreateTask ] [text "Create Task"]
+      , button [ onClick ShowFilterPanel ] [text "Filter Tasks"]
+      , button [ onClick LogOut ] [text "LogOut"]
       ]
-  ]
+      ,div [class "panel"]
+        [
+        renderDashboard model
+        , if model.renderView == "CreateTask" then div [ classList [( "mini-panel", True), ("show", openSidePanel),  ("hide", not openSidePanel)] ][ renderCreateTaskView model ] else text ""
+        , if model.renderView == "FilterTasks" then div [ classList [( "mini-panel", True), ("show", openSidePanel), ("hide", not openSidePanel)] ][ renderFilterView model ] else text ""
+        ]
+      ]
+
+loginView : Model -> Html Msg
+loginView model =
+  div []
+    [ div [][ label [] [text "UserName: "]
+    , input [  placeholder "Enter Your Email Id"
+            , onInput EnterUseEmail
+            , value model.loginUser.userEmail
+            ]
+            []]
+    , div [] [label [] [text "Password: "]
+    , input [ onInput EnterUserPassword
+            , type_ "password"
+            , value model.loginUser.userPassword
+            ]
+            []]
+    , div [] [ button [onClick Login ]
+            [text "Login"]]
 
 
+    ]
 renderDashboard: Model -> Html Msg
 renderDashboard model =
     div [class "main-panel"]
         [
-        h2 [class "headerStyle"] [ text ("My Tasks" ++ model.renderView) ]
+        h2 [class "headerStyle"] [ text "My Tasks" ]
         , div [class "filter"] [  radio "All" (SwitchVisibility "All") (if model.visibility == "All" then True else False)
                     , radio "Completed" (SwitchVisibility "Completed") (if model.visibility == "Completed" then True else False)
                     , radio "Outstanding" (SwitchVisibility "OutStanding") (if model.visibility == "OutStanding" then True else False)
@@ -866,6 +932,25 @@ userDecoder =
        |> required "name" Json.string
        |> optional "email" Json.string ""
 
+logInUserEncoder : LoginUser -> JE.Value
+logInUserEncoder loginUser =
+  let
+    _ = log "loginUser===" loginUser
+  in
+    JE.object
+        [ ( "email", JE.string loginUser.userEmail )
+        , ( "pwd", JE.string loginUser.userPassword )
+        ]
+
+logInUserRequest : LoginUser -> Cmd Msg
+logInUserRequest loginUser =
+    Http.post
+        { url = "http://172.15.3.11:9999/task-bucket-api/login"
+        , body = Http.jsonBody (logInUserEncoder loginUser)
+        , expect = Http.expectJson UserLoggedIn userDecoder
+        --, timeout = Nothing
+        --, withCredentials = False
+        }
 
 getUsersRequest : Cmd Msg
 getUsersRequest =
