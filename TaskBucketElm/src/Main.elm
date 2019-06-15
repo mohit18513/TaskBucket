@@ -80,6 +80,18 @@ type alias User =
   , name : String
   , email : String
   }
+type alias LoginUser =
+  { userEmail : String
+  , userPassword : String
+  }
+
+type alias ID =
+    { id : Int
+    }
+type alias Message =
+    { message : String
+    }
+
 
 type alias Model =
     { taskCount : Int
@@ -94,6 +106,7 @@ type alias Model =
     , commentList : List Comment
     , filterValues : FilterValues
     , tempCreatTaskOwnerName : String
+    , loginUser : LoginUser
     }
 
 type alias Comment =
@@ -138,6 +151,7 @@ emptyModel =
                         , selectedOwnerList = []
                       }
       , tempCreatTaskOwnerName = ""
+      , loginUser = emptyLoginUser
     }
 
 emptyTask : Task
@@ -156,11 +170,18 @@ emptyTask =
     , showDetails = False
     }
 
+
 emptyUser: User
 emptyUser =
   { id = 0
   , name = ""
   , email = ""
+  }
+
+emptyLoginUser: LoginUser
+emptyLoginUser =
+  { userEmail = ""
+  , userPassword = ""
   }
 
 
@@ -177,10 +198,11 @@ type Msg
     | InputTaskDueDate String
     | SetCreateTaskOwner User
     | CancelTask
-    | DeleteIt Int
+    | DeleteTask Task
     | MarkItCompleted Int
     | SwitchVisibility String
     | TaskCreated (Result Http.Error Task)
+    | TaskDeleted (Result Http.Error Message)
     | GetTasks
     | TasksFetched  (Result Http.Error (List Task))
     | InputCommentText String
@@ -201,6 +223,11 @@ type Msg
     | FilterCreatorRecord User
     | ToggleOwnerFilterDropdown
     | FilterOwnerRecord User
+    | EnterUseEmail String
+    | EnterUserPassword String
+    | Login
+    | UserLoggedIn (Result Http.Error User)
+    | LogOut
 --type Visibility1 = All | OutStanding | Completed
 port setStorage : Model -> Cmd msg
 
@@ -263,12 +290,16 @@ update msg model =
         CancelTask ->
           ({model | renderView = "Dashboard", newTask= emptyTask}, Cmd.none)
 
-        DeleteIt id ->
+        DeleteTask taskToBeDeleted ->
+          let
+            taskList = List.filter (\task -> task.taskId /= taskToBeDeleted.taskId) model.taskList
+          in
             --log (toString id)
             ({ model
                 | taskCount = model.taskCount
-                , taskList = List.filter (\task -> task.taskId /= id) model.taskList
-            }, Cmd.none)
+                , taskList = taskList
+                , filteredTaskList = taskList
+            }, deleteTaskRequest taskToBeDeleted)
         MarkItCompleted id ->
           -- let
           --   log "Hello G==" id
@@ -291,6 +322,14 @@ update msg model =
         TaskCreated (Err err) ->
           let
             _ = Debug.log "Error TaskCreated==" err
+          in
+            ( model, Cmd.none )
+        TaskDeleted (Ok message) ->
+            ( model, Cmd.none )
+
+        TaskDeleted (Err err) ->
+          let
+            _ = Debug.log "Error TaskDeleted==" err
           in
             ( model, Cmd.none )
         GetTasks ->
@@ -492,6 +531,33 @@ update msg model =
            in
             ( { model | filterValues = newfilterValues } ,Cmd.none)
 
+        EnterUseEmail userEmail ->
+          let
+            loginUser = model.loginUser
+            updatedLoginUser = {loginUser | userEmail = userEmail}
+          in
+            ({model | loginUser = updatedLoginUser}, Cmd.none)
+        EnterUserPassword userPassword ->
+          let
+            loginUser = model.loginUser
+            updatedLoginUser = {loginUser | userPassword = userPassword}
+          in
+            ({model | loginUser = updatedLoginUser}, Cmd.none)
+        Login ->
+          (model, logInUserRequest model.loginUser)
+        UserLoggedIn  (Ok user) ->
+            ( {model | user = user}, Cmd.none )
+
+        UserLoggedIn (Err err) ->
+          let
+            _ = Debug.log "Error UserLoggedIn===" err
+          in
+            ( model, Cmd.none )
+        LogOut ->
+            ({model | loginUser = emptyLoginUser, user = emptyUser}, Cmd.none)
+
+
+
 
 
 
@@ -518,8 +584,8 @@ renderList lst model =
                             , label [] [text "  Status: "]
                             , label [] [text (getStatus l.status)]
                             , label [] [text "  Commented On: "]
-                            , label [] [text l.commentedOn]
-                            , button [ onClick (DeleteIt l.taskId)] [text "Delete"]]
+                            , label [] [text l.commentedOn]]
+                            , button [ onClick (DeleteTask l)] [text "Delete"]
                             --, button [ class "button", onClick (AddComment (defaultComment model.user l))][text "Add Comment"]]
                             --, button [ class "button", onClick (CreateComment l) ][text "Add Comment"]
                             --, button [ class "button", onClick (FetchComments  l)][text "Show Comments"]]
@@ -538,14 +604,14 @@ renderList lst model =
             lst
         )
 
-renderTaskComments: List Comment -> Html msg
-renderTaskComments comments =
+renderTaskComments: List Comment -> List User-> Html msg
+renderTaskComments comments userList =
     ol []
         (List.map
             (\comment ->
                 li [  ]
                    [ div [class "list-item"]
-                           [ div [class "list-header"][div[][textarea [] [text comment.text]]]
+                           [ div [class "list-header"][div[][textarea [] [text comment.text], div [] [label [][text "Added By: "], label [][text (getUserName userList  comment.createdBy)]]]]
                            ]
                     ]
             )
@@ -554,6 +620,9 @@ renderTaskComments comments =
 
 renderTaskDetails : Task -> Model -> Html Msg
 renderTaskDetails task model =
+  let
+    _ = Debug.log "task details===" task
+  in
       div []
         [ div []
             [ label [][ text "Owner: "]
@@ -566,10 +635,10 @@ renderTaskDetails task model =
             , label [] [text task.createdOn]
             ]
            --, a [onClick (ShowTaskDetails task)] [text task.title]
-           --, div[class "button-collection"][button [ onClick (DeleteIt task.taskId)] [text "Delete"]
+           --, div[class "button-collection"][button [ onClick (DeleteTask task.taskId)] [text "Delete"]
            --, button [ class "button", onClick (AddComment (defaultComment model.user l))][text "Add Comment"]]
            , if model.renderView == "CreateComment" then div [ ][ renderCreateCommentView model ] else div [class "button-collection"][button [ class "button", onClick (CreateComment task) ][text "Add Comment"]]
-           , renderTaskComments model.commentList  --button [ class "button", onClick (FetchComments task)][text "Show Comments"]
+           , renderTaskComments model.commentList model.userList  --button [ class "button", onClick (FetchComments task)][text "Show Comments"]
            ]
            -- ,div[class "body"][
            --   text "body here"
@@ -602,27 +671,48 @@ view model =
           True
         _ ->
           False
+    isUserNotLoggedIn = model.user == emptyUser
   in
-  div[][
-    div[class "header"][
-    h1 [class "headerStyle"] [ text "Dashboard" ]
-    , button [ onClick CreateTask ] [text "Create Task"]
-    , button [ onClick ShowFilterPanel ] [text "Filter Tasks"]
-    ]
-    ,div [class "panel"]
-      [
-      renderDashboard model
-      , if model.renderView == "CreateTask" then div [ classList [( "mini-panel", True), ("show", openSidePanel),  ("hide", not openSidePanel)] ][ renderCreateTaskView model ] else text ""
-      , if model.renderView == "FilterTasks" then div [ classList [( "mini-panel", True), ("show", openSidePanel), ("hide", not openSidePanel)] ][ renderFilterView model ] else text ""
+    if isUserNotLoggedIn then loginView model else div [][
+      div [class "header"][
+      h1 [class "headerStyle"] [ text "Dashboard" ]
+      , button [ onClick CreateTask ] [text "Create Task"]
+      , button [ onClick ShowFilterPanel ] [text "Filter Tasks"]
+      , button [ onClick LogOut ] [text "LogOut"]
       ]
-  ]
+      ,div [class "panel"]
+        [
+        renderDashboard model
+        , if model.renderView == "CreateTask" then div [ classList [( "mini-panel", True), ("show", openSidePanel),  ("hide", not openSidePanel)] ][ renderCreateTaskView model ] else text ""
+        , if model.renderView == "FilterTasks" then div [ classList [( "mini-panel", True), ("show", openSidePanel), ("hide", not openSidePanel)] ][ renderFilterView model ] else text ""
+        ]
+      ]
+
+loginView : Model -> Html Msg
+loginView model =
+  div []
+    [ div [][ label [] [text "UserName: "]
+    , input [  placeholder "Enter Your Email Id"
+            , onInput EnterUseEmail
+            , value model.loginUser.userEmail
+            ]
+            []]
+    , div [] [label [] [text "Password: "]
+    , input [ onInput EnterUserPassword
+            , type_ "password"
+            , value model.loginUser.userPassword
+            ]
+            []]
+    , div [] [ button [onClick Login ]
+            [text "Login"]]
 
 
+    ]
 renderDashboard: Model -> Html Msg
 renderDashboard model =
     div [class "main-panel"]
         [
-        h2 [class "headerStyle"] [ text ("My Tasks" ++ model.renderView) ]
+        h2 [class "headerStyle"] [ text "My Tasks" ]
         , div [class "filter"] [  radio "All" (SwitchVisibility "All") (if model.visibility == "All" then True else False)
                     , radio "Completed" (SwitchVisibility "Completed") (if model.visibility == "Completed" then True else False)
                     , radio "Outstanding" (SwitchVisibility "OutStanding") (if model.visibility == "OutStanding" then True else False)
@@ -740,6 +830,20 @@ newTaskEncoder task =
         , ( "status", JE.int task.status )
         , ( "due_date", JE.string task.due_date )
         ]
+taskEncoder : Task -> JE.Value
+taskEncoder task =
+  let
+    _ = log "task===" task
+  in
+    JE.object
+        [ ( "id", JE.int task.taskId )
+        , ( "title", JE.string task.title )
+        , ( "description", JE.string task.description )
+        , ( "created_by", JE.int task.created_by )
+        , ( "owner", JE.int task.ownerId )
+        , ( "status", JE.int task.status )
+        , ( "due_date", JE.string task.due_date )
+        ]
 
 taskDecoder : Json.Decoder Task
 taskDecoder =
@@ -756,6 +860,17 @@ taskDecoder =
         |> optional "isTaskDeleted" Json.bool False
         |> optional "isTaskCompleted" Json.bool False
         |> optional "showDetails" Json.bool False
+
+intDecoder : Json.Decoder ID
+intDecoder =
+    Json.succeed ID
+        |> required "id" Json.int
+
+deleteMessageDecoder : Json.Decoder Message
+deleteMessageDecoder =
+    Json.succeed Message
+        |> required "message" Json.string
+
 
 taskListDecoder : Json.Decoder (List Task)
 taskListDecoder = Json.list taskDecoder
@@ -800,6 +915,16 @@ getCommentsRequest taskId =
      , expect = Http.expectJson CommentsFetched commentListDecoder
      }
 
+deleteTaskRequest : Task -> Cmd Msg
+deleteTaskRequest task =
+    Http.post
+        { url = "http://172.15.3.11:9999/task-bucket-api/tasks/delete"
+        , body = Http.jsonBody (taskEncoder task)
+        , expect = Http.expectJson TaskDeleted deleteMessageDecoder
+        --, timeout = Nothing
+        --, withCredentials = False
+        }
+
 commentListDecoder : Json.Decoder (List Comment)
 commentListDecoder = Json.list commentDecoder
 
@@ -821,6 +946,25 @@ userDecoder =
        |> required "name" Json.string
        |> optional "email" Json.string ""
 
+logInUserEncoder : LoginUser -> JE.Value
+logInUserEncoder loginUser =
+  let
+    _ = log "loginUser===" loginUser
+  in
+    JE.object
+        [ ( "email", JE.string loginUser.userEmail )
+        , ( "pwd", JE.string loginUser.userPassword )
+        ]
+
+logInUserRequest : LoginUser -> Cmd Msg
+logInUserRequest loginUser =
+    Http.post
+        { url = "http://172.15.3.11:9999/task-bucket-api/login"
+        , body = Http.jsonBody (logInUserEncoder loginUser)
+        , expect = Http.expectJson UserLoggedIn userDecoder
+        --, timeout = Nothing
+        --, withCredentials = False
+        }
 
 getUsersRequest : Cmd Msg
 getUsersRequest =
