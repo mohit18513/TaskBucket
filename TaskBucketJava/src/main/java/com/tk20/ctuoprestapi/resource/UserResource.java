@@ -57,6 +57,8 @@ public class UserResource {
 				user.setId(userCursor.getInt("id"));
 				user.setName(userCursor.getString("name"));
 				user.setEmail(userCursor.getString("email"));
+				user.setRole(userCursor.getString("role"));
+				user.setImageurl(userCursor.getString("imageurl"));
 				users.add(user);
 			}
 

@@ -11,7 +11,8 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
 public class SendEmail {
-	public static void send(String messageString, HashSet<String> emailIdSet, String sender, String subject) {
+	public static void send(String messageString, HashSet<String> emailIdSet,
+			String sender, String subject) {
 
 		// Assuming you are sending email from localhost
 		String host = "localhost";
@@ -34,7 +35,8 @@ public class SendEmail {
 
 			// Set To: header field of the header.
 			for (String emailId : emailIdSet) {
-				message.addRecipient(Message.RecipientType.TO, new InternetAddress(emailId));
+				message.addRecipient(Message.RecipientType.TO,
+						new InternetAddress(emailId));
 			}
 			// message.addRecipient(Message.RecipientType.TO,
 			// new InternetAddress(to1));
@@ -43,7 +45,7 @@ public class SendEmail {
 			message.setSubject(subject);
 
 			// Now set the actual message
-			message.setText(messageString);
+			message.setContent(messageString, "text/html");
 
 			// Send message
 			Transport.send(message);
