@@ -358,7 +358,7 @@ update msg model =
          ({model | renderView = "CreateComment", newTask = task}, Cmd.none )
 
         CommentCreated (Ok comment) ->
-            ( {model | renderView ="Dashboard" }, getCommentsRequest comment.taskId )
+            ( {model | renderView ="Dashboard" }, Cmd.batch [ getTasksRequest, getCommentsRequest comment.taskId] )
 
         CommentCreated (Err err) ->
           let
