@@ -68,8 +68,11 @@ type alias Task =
     , ownerId : Int
     , status : Int
     , due_date : String
+    , createdOn : String
+    , commentedOn : String
     , isTaskDeleted : Bool
     , isTaskCompleted : Bool
+    , showDetails : Bool
     }
 
 type alias User =
@@ -83,12 +86,15 @@ type alias Model =
     , newTask : Task
     , visibility : String
     , taskList : List Task
+    , filteredTaskList : List Task
     , userList : List User
     , renderView : String
     , user : User
     , currentComment : Comment
-    , commentList : List Task
+    , commentList : List Comment
+    , filterValues : FilterValues
     }
+
 type alias Comment =
     { commentId : Int
     , taskId :  Int
@@ -96,6 +102,17 @@ type alias Comment =
     , createdBy : Int
     }
 
+type alias FilterValues =
+    { due_date : String
+    , create_date : String
+    , createdBy : Int
+    , last_comment_date : String
+    , titleSearchText : String
+    , showCreatorDropdown : Bool
+    , selectedCreatorList : List User
+    , showOwnerDropdown : Bool
+    , selectedOwnerList : List User
+    }
 
 emptyModel : Model
 emptyModel =
@@ -103,12 +120,24 @@ emptyModel =
       , newTask = emptyTask
       , visibility = "All"
       , taskList = []
+      , filteredTaskList = []
       , userList = []
       , renderView = "Dashboard"
       , user = emptyUser
       , currentComment = defaultComment emptyUser emptyTask
-      , commentList =[]
+      , commentList = []
+      , filterValues = { due_date = ""
+                        , create_date = ""
+                        , createdBy = 1
+                        , last_comment_date = ""
+                        , titleSearchText = ""
+                        , showCreatorDropdown = False
+                        , selectedCreatorList = []
+                        , showOwnerDropdown = False
+                        , selectedOwnerList = []
+                      }
     }
+
 emptyTask : Task
 emptyTask =
     { taskId = 1
@@ -117,9 +146,12 @@ emptyTask =
     , created_by = 1
     , ownerId = 1
     , status = 0
-    , due_date = "2019-06-10"
+    , due_date = ""
+    , createdOn = ""
+    , commentedOn = ""
     , isTaskDeleted = False
     , isTaskCompleted = False
+    , showDetails = False
     }
 
 emptyUser: User
@@ -137,8 +169,10 @@ emptyUser =
 type Msg
     = AddTask
     | CreateTask
-    | InputTask String
+    | ShowFilterPanel
+    | InputTaskTitle String
     | InputDescription String
+    | InputTaskDueDate String
     | CancelTask
     | DeleteIt Int
     | MarkItCompleted Int
@@ -149,13 +183,21 @@ type Msg
     | InputCommentText String
     | CancelComment
     | AddComment  Comment Task
-    | FetchComments Task
     | CommentsFetched (Result Http.Error (List Comment))
     | CommentCreated  (Result Http.Error Comment)
     | CreateComment Task
     | UsersFetched (Result Http.Error (List User))
-
-
+    | ShowTaskDetails Task
+    | ApplyFilter
+    | CancelFilter
+    | InputFilterDueDate String
+    | InputFilterCreateDate String
+    | InputFilterLastCommentDate String
+    | InputFilterTitleSearchText String
+    | ToggleCreatorDropdown
+    | FilterCreatorRecord User
+    | ToggleOwnerDropdown
+    | FilterOwnerRecord User
 --type Visibility1 = All | OutStanding | Completed
 port setStorage : Model -> Cmd msg
 
@@ -185,7 +227,12 @@ update msg model =
             _ = Debug.log "newTask==" model.newTask
           in
             ({model | renderView = "CreateTask", newTask = emptyTask}, Cmd.none )
-        InputTask title ->
+        ShowFilterPanel ->
+          let
+            _ = Debug.log "showFilterPanel==" ""
+          in
+            ({model | renderView = "FilterTasks"}, Cmd.none )
+        InputTaskTitle title ->
           let
             task = model.newTask
             newTask = {task | title = title}
@@ -197,10 +244,14 @@ update msg model =
             newTask = {task | description = description}
           in
             ({model | newTask = newTask}, Cmd.none)
+        InputTaskDueDate due_date ->
+          let
+            task = model.newTask
+            newTask = {task | due_date = due_date}
+          in
+            ({model | newTask = newTask}, Cmd.none)
         CancelTask ->
           ({model | renderView = "Dashboard", newTask= emptyTask}, Cmd.none)
-
-
 
         DeleteIt id ->
             --log (toString id)
@@ -236,7 +287,7 @@ update msg model =
             --log "Value ==" title
             (model, getTasksRequest )
         TasksFetched (Ok tasks) ->
-            ( {model | taskList = tasks}, Cmd.none )
+            ( {model | taskList = tasks, filteredTaskList = tasks}, Cmd.none )
 
         TasksFetched (Err err) ->
           let
@@ -246,11 +297,8 @@ update msg model =
         AddComment  comment task->
           (model, createCommentRequest model.user task comment )
 
-        FetchComments task->
-           (model, getCommentsRequest task)
-
         CommentsFetched (Ok comments) ->
-           ( model, Cmd.none )
+           ( {model | commentList = comments} , Cmd.none )
 
         CommentsFetched (Err err) ->
           let
@@ -261,7 +309,7 @@ update msg model =
          ({model | renderView = "CreateComment", newTask = task}, Cmd.none )
 
         CommentCreated (Ok comment) ->
-            ( {model | renderView ="Dashboard" }, Cmd.none )
+            ( {model | renderView ="Dashboard" }, getCommentsRequest comment.taskId )
 
         CommentCreated (Err err) ->
           let
@@ -287,6 +335,150 @@ update msg model =
             _ = Debug.log "Error users fecthed===" err
           in
             ( model, Cmd.none )
+        InputFilterDueDate due_date ->
+         let
+           _ = Debug.log "InputFilterDueDate ===" due_date
+           filterValues = model.filterValues
+           filterValuesUpdated = {filterValues | due_date = due_date}
+         in
+           ({model | filterValues = filterValuesUpdated}, Cmd.none)
+        InputFilterCreateDate create_date ->
+         let
+           _ = Debug.log "InputFilterCreateDate ===" create_date
+           filterValues = model.filterValues
+           filterValuesUpdated = {filterValues | create_date = create_date}
+         in
+           ({model | filterValues = filterValuesUpdated}, Cmd.none)
+        InputFilterLastCommentDate last_comment_date ->
+         let
+           _ = Debug.log "InputFilterLastCommentDate ===" last_comment_date
+           filterValues = model.filterValues
+           filterValuesUpdated = {filterValues | last_comment_date = last_comment_date}
+         in
+           ({model | filterValues = filterValuesUpdated}, Cmd.none)
+        InputFilterTitleSearchText searchText ->
+           let
+             _ = Debug.log "InputFilterTitleSearchText ===" searchText
+             filterValues = model.filterValues
+             filterValuesUpdated = {filterValues | titleSearchText = searchText}
+           in
+           ({model | filterValues = filterValuesUpdated}, Cmd.none)
+        ApplyFilter ->
+          let
+            _ = Debug.log "ApplyFilter ==="
+            tempFilteredTaskList =
+              if model.filterValues.due_date == "" then
+                model.taskList
+              else
+                List.filter (\task -> task.due_date == model.filterValues.due_date) model.taskList
+
+            temp0FilteredTaskList =
+              if model.filterValues.create_date == "" then
+                tempFilteredTaskList
+              else
+                List.filter (\task -> String.contains model.filterValues.create_date task.createdOn) tempFilteredTaskList
+
+            temp1FilteredTaskList =
+              if model.filterValues.titleSearchText == "" then
+                tempFilteredTaskList
+              else
+                List.filter (\task -> String.contains (String.toLower model.filterValues.titleSearchText) (String.toLower task.title) ) temp0FilteredTaskList
+
+            temp2FilteredTaskList =
+              let
+                selectedCreatorList = model.filterValues.selectedCreatorList
+                selectedCreatorIdList = List.map (\selectedCreator -> selectedCreator.id) selectedCreatorList
+              in
+                if List.isEmpty selectedCreatorIdList
+                  then
+                    temp1FilteredTaskList
+                  else
+                    List.filter (\task -> List.member task.created_by selectedCreatorIdList) temp1FilteredTaskList
+
+            temp3FilteredTaskList =
+              let
+                selectedOwnerList = model.filterValues.selectedOwnerList
+                selectedOwnerIdList = List.map (\selectedOwner -> selectedOwner.id) selectedOwnerList
+              in
+                if List.isEmpty selectedOwnerIdList
+                  then
+                    temp2FilteredTaskList
+                  else
+                    List.filter (\task -> List.member task.created_by selectedOwnerIdList) temp2FilteredTaskList
+
+            temp4FilteredTaskList =
+              if model.filterValues.last_comment_date == "" then
+                temp3FilteredTaskList
+              else
+                List.filter (\task -> String.contains model.filterValues.last_comment_date task.commentedOn) temp3FilteredTaskList
+
+          in
+            ({ model
+                | filteredTaskList = temp4FilteredTaskList
+            }, Cmd.none)
+        CancelFilter ->
+           ({model | filteredTaskList = model.taskList
+                    , renderView = "Dashboard"
+                    , filterValues = emptyModel.filterValues}, Cmd.none)
+
+        ShowTaskDetails currentTask ->
+          let
+            tasks = model.taskList
+                      |> List.map (\task -> if task.taskId == currentTask.taskId then {task | showDetails = True} else {task | showDetails = False} )
+          in
+           ({model | taskList = tasks}, getCommentsRequest currentTask.taskId)
+
+        ToggleCreatorDropdown ->
+          let
+             newValue = if model.filterValues.showCreatorDropdown then False else True
+             oldfilterValues = model.filterValues
+             newfilterValues = { oldfilterValues | showCreatorDropdown =newValue}
+          in
+            ( {model |  filterValues = newfilterValues}  ,Cmd.none)
+
+        FilterCreatorRecord user ->
+         let
+          filteredUser =
+            List.filter (\x -> x.id == user.id) model.filterValues.selectedCreatorList
+
+          newUserList =
+            if List.isEmpty filteredUser then
+                user :: model.filterValues.selectedCreatorList
+            else
+              List.filter (\x -> x.id /= user.id) model.filterValues.selectedCreatorList
+          oldfilterValues = model.filterValues
+          newfilterValues =
+            { oldfilterValues | selectedCreatorList = newUserList}
+         in
+          ( { model | filterValues = newfilterValues } ,Cmd.none)
+
+        ToggleOwnerDropdown ->
+           let
+              newValue = if model.filterValues.showOwnerDropdown then False else True
+              oldfilterValues = model.filterValues
+
+              newfilterValues =
+                { oldfilterValues | showOwnerDropdown = newValue}
+           in
+            ( {model | filterValues = newfilterValues } ,Cmd.none)
+
+        FilterOwnerRecord user ->
+           let
+            filteredUser =
+              List.filter (\x -> x.id == user.id) model.filterValues.selectedOwnerList
+
+            newUserList =
+              if List.isEmpty filteredUser then
+                  user :: model.filterValues.selectedOwnerList
+              else
+                List.filter (\x -> x.id /= user.id) model.filterValues.selectedOwnerList
+
+            oldfilterValues = model.filterValues
+            newfilterValues =
+                { oldfilterValues | selectedOwnerList = newUserList}
+           in
+            ( { model | filterValues = newfilterValues } ,Cmd.none)
+
 
 
 
@@ -306,27 +498,80 @@ renderList lst model =
             (\l ->
                 li [  ]
                    [ div [class "list-item"]
-                           [ div[class "list-header"][input [ type_ "checkbox"
-                                   , onClick (MarkItCompleted l.taskId)
-                                   , checked l.isTaskCompleted
-                                   ]
-                                   []
+                           [ div [class "list-header"][div[onClick (ShowTaskDetails l)][label [] [text "Title: "]
                             , label [] [text l.title]
-                            , div[class "button-collection"][button [ onClick (DeleteIt l.taskId)] [text "Delete"]
+                            , label [] [text "  Description: "]
+                            , label [] [text (l.description)]
+                            , label [] [text "  Status: "]
+                            , label [] [text (getStatus l.status)]
+                            , label [] [text "  Commented On: "]
+                            , label [] [text l.commentedOn]
+                            , button [ onClick (DeleteIt l.taskId)] [text "Delete"]]
                             --, button [ class "button", onClick (AddComment (defaultComment model.user l))][text "Add Comment"]]
-                            , button [ class "button", onClick (CreateComment l) ][text "Add Comment"]
-                            , button [ class "button", onClick (FetchComments  l)][text "Show Comments"]]
+                            --, button [ class "button", onClick (CreateComment l) ][text "Add Comment"]
+                            --, button [ class "button", onClick (FetchComments  l)][text "Show Comments"]]
+                            , if l.showDetails then renderTaskDetails l model else text ""
                             ]
                             -- ,div[class "body"][
                             --   text "body here"
                             -- ]
 
+
                            ]
+
 
                     ]
             )
             lst
         )
+
+renderTaskComments: List Comment -> Html msg
+renderTaskComments comments =
+    ol []
+        (List.map
+            (\comment ->
+                li [  ]
+                   [ div [class "list-item"]
+                           [ div [class "list-header"][div[][textarea [] [text comment.text]]]
+                           ]
+                    ]
+            )
+            comments
+        )
+
+renderTaskDetails : Task -> Model -> Html Msg
+renderTaskDetails task model =
+      div []
+        [ div []
+            [ label [][ text "Owner: "]
+            , label [] [text (getUserName model.userList task.ownerId)]
+            , label [][ text "  Due Date: "]
+            , label [] [text task.due_date]
+            , label [][ text "  Created By: "]
+            , label [] [text (getUserName model.userList task.created_by)]
+            , label [][ text "  Created On: "]
+            , label [] [text task.createdOn]
+            ]
+           --, a [onClick (ShowTaskDetails task)] [text task.title]
+           --, div[class "button-collection"][button [ onClick (DeleteIt task.taskId)] [text "Delete"]
+           --, button [ class "button", onClick (AddComment (defaultComment model.user l))][text "Add Comment"]]
+           , if model.renderView == "CreateComment" then div [ ][ renderCreateCommentView model ] else div [class "button-collection"][button [ class "button", onClick (CreateComment task) ][text "Add Comment"]]
+           , renderTaskComments model.commentList  --button [ class "button", onClick (FetchComments task)][text "Show Comments"]
+           ]
+           -- ,div[class "body"][
+           --   text "body here"
+           -- ]
+
+
+getUserName : List User -> Int -> String
+getUserName  users id =
+  let
+    user = users
+      |> List.filter( \u -> u.id == id)
+      |> List.head
+      |> Maybe.withDefault emptyUser
+  in
+    user.name
 
 -- VIEW
 
@@ -338,6 +583,10 @@ view model =
       case model.renderView of
         "CreateTask" ->
           True
+        "CreateComment" ->
+          True
+        "FilterTasks" ->
+          True
         _ ->
           False
   in
@@ -345,12 +594,13 @@ view model =
     div[class "header"][
     h1 [class "headerStyle"] [ text "Dashboard" ]
     , button [ onClick CreateTask ] [text "Create Task"]
+    , button [ onClick ShowFilterPanel ] [text "Filter Tasks"]
     ]
     ,div [class "panel"]
       [
-
       renderDashboard model
-      , div [ classList [( "mini-panel", True), ("show", openSidePanel),  ("hide", not openSidePanel)] ][ renderCreateTaskView model ]
+      , if model.renderView == "CreateTask" then div [ classList [( "mini-panel", True), ("show", openSidePanel),  ("hide", not openSidePanel)] ][ renderCreateTaskView model ] else text ""
+      , if model.renderView == "FilterTasks" then div [ classList [( "mini-panel", True), ("show", openSidePanel), ("hide", not openSidePanel)] ][ renderFilterView model ] else text ""
       ]
   ]
 
@@ -359,14 +609,14 @@ renderDashboard: Model -> Html Msg
 renderDashboard model =
     div [class "main-panel"]
         [
-        h2 [class "headerStyle"] [ text "My Tasks" ]
+        h2 [class "headerStyle"] [ text ("My Tasks" ++ model.renderView) ]
         , div [class "filter"] [  radio "All" (SwitchVisibility "All") (if model.visibility == "All" then True else False)
                     , radio "Completed" (SwitchVisibility "Completed") (if model.visibility == "Completed" then True else False)
                     , radio "Outstanding" (SwitchVisibility "OutStanding") (if model.visibility == "OutStanding" then True else False)
 
                   ]
 
-        , renderList (keep model.visibility model.taskList) model
+        , renderList (keep model.visibility model.filteredTaskList) model
         ]
 
 
@@ -383,13 +633,14 @@ radio value msg isChecked=
             ] []
     , text value
     ]
+
 renderCreateTaskView: Model -> Html Msg
 renderCreateTaskView model =
   div []
       [ h1 [] [ text "Create New Task" ]
       , div[class "fieldset"][label [] [text "Want to track a task? Add here!"]
-      , input [  placeholder "Want to track a task? Add here!"
-              , onInput InputTask
+      , input [  placeholder "Title"
+              , onInput InputTaskTitle
               , value model.newTask.title
               ]
               []]
@@ -398,14 +649,55 @@ renderCreateTaskView model =
               ]
               []
               ]
+      , div[class "fieldset"][label [] [text "Due Date"]
+      , input [  placeholder "YYYY-MM-DD"
+              , onInput InputTaskDueDate
+              , value model.newTask.due_date
+              ]
+              []]
       ,div[class "button-collection"][ button [ class "primary", onClick AddTask ] [text "Create"]
       , button [ onClick CancelTask ] [text "Cancel"]]
+      ]
+
+renderFilterView: Model -> Html Msg
+renderFilterView model =
+  div []
+      [ h1 [] [ text "Filter Tasks" ]
+      , div[class "fieldset"][label [] [text "Title : "]
+      , input [  placeholder ""
+              , onInput InputFilterTitleSearchText
+              , value model.filterValues.titleSearchText
+              ]
+              []]
+      , renderOwnerDropdown model
+      , renderCreatorDropdown model
+
+      , div[class "fieldset"][label [] [text "Due On : "]
+      , input [ placeholder "YYYY-MM-DD"
+              , onInput InputFilterDueDate
+              , value model.filterValues.due_date
+              ]
+              []]
+      , div[class "fieldset"][label [] [text "Created On : "]
+      , input [ placeholder "YYYY-MM-DD"
+              , onInput InputFilterCreateDate
+              , value model.filterValues.create_date
+              ]
+              []]
+      , div[class "fieldset"][label [] [text "Last Comment On : "]
+      , input [ placeholder "YYYY-MM-DD"
+              , onInput InputFilterLastCommentDate
+              , value model.filterValues.last_comment_date
+              ]
+              []]
+      , div[class "button-collection"][ button [ class "primary", onClick ApplyFilter ] [text "Apply"]
+      , button [ onClick CancelFilter ] [text "Cancel"]]
       ]
 
 createTaskRequest : Task -> Cmd Msg
 createTaskRequest task =
     Http.post
-        { url = "http://172.15.3.209:9999/task-bucket-api/tasks"
+        { url = "http://172.15.3.11:9999/task-bucket-api/tasks"
         , body = Http.jsonBody (newTaskEncoder task)
         , expect = Http.expectJson TaskCreated taskDecoder
         --, timeout = Nothing
@@ -414,7 +706,7 @@ createTaskRequest task =
 getTasksRequest : Cmd Msg
 getTasksRequest =
   Http.get
-      { url = "http://172.15.3.209:9999/task-bucket-api/tasks"
+      { url = "http://172.15.3.11:9999/task-bucket-api/tasks"
       , expect = Http.expectJson TasksFetched taskListDecoder
       --, timeout = Nothing
       --, withCredentials = False
@@ -445,8 +737,11 @@ taskDecoder =
         |> optional "owner" Json.int 0
         |> optional "status" Json.int 0
         |> optional "due_date" Json.string "2019-06-10"
+        |> optional "createtime" Json.string ""
+        |> optional "last_commented_on" Json.string ""
         |> optional "isTaskDeleted" Json.bool False
         |> optional "isTaskCompleted" Json.bool False
+        |> optional "showDetails" Json.bool False
 
 taskListDecoder : Json.Decoder (List Task)
 taskListDecoder = Json.list taskDecoder
@@ -461,7 +756,7 @@ defaultComment  user task =
 createCommentRequest : User -> Task -> Comment -> Cmd Msg
 createCommentRequest user task comment =
    Http.post
-       { url = "http://172.15.3.209:9999/task-bucket-api/tasks/"++ String.fromInt(task.taskId) ++"/comments"
+       { url = "http://172.15.3.11:9999/task-bucket-api/tasks/"++ String.fromInt(task.taskId) ++"/comments"
        , body = Http.jsonBody (createCommentEncoder user task comment)
        , expect = Http.expectJson CommentCreated commentDecoder
        }
@@ -477,17 +772,17 @@ createCommentEncoder user task comment=
 commentDecoder : Json.Decoder Comment
 commentDecoder =
    Json.succeed Comment
-       |> required "commentId" Json.int
-       |> required "taskId" Json.int
+       |> required "id" Json.int
+       |> required "task_id" Json.int
        |> optional "text" Json.string ""
-       |> optional "createdBy" Json.int 1
+       |> optional "created_by" Json.int 1
 
 
-getCommentsRequest : Task -> Cmd Msg
-getCommentsRequest task =
+getCommentsRequest : Int -> Cmd Msg
+getCommentsRequest taskId =
  Http.get
      {
-     url = "http://172.15.3.209:9999/task-bucket-api/tasks/" ++ String.fromInt(task.taskId) ++"/comments"
+     url = "http://172.15.3.11:9999/task-bucket-api/tasks/" ++ String.fromInt(taskId) ++"/comments"
      , expect = Http.expectJson CommentsFetched commentListDecoder
      }
 
@@ -504,7 +799,7 @@ renderCreateCommentView model =
      , button [ onClick (AddComment model.currentComment model.newTask)] [text "Create"]
      , button [ onClick CancelComment ] [text "Cancel"]
      ]
-     
+
 userDecoder : Json.Decoder User
 userDecoder =
    Json.succeed User
@@ -516,9 +811,109 @@ userDecoder =
 getUsersRequest : Cmd Msg
 getUsersRequest =
  Http.get
-     { url = "http://172.15.3.209:9999/task-bucket-api/users"
+     { url = "http://172.15.3.11:9999/task-bucket-api/users"
      , expect = Http.expectJson UsersFetched userListDecoder
      }
 
 userListDecoder : Json.Decoder (List User)
 userListDecoder = Json.list userDecoder
+
+getStatus : Int -> String
+getStatus status =
+  case status of
+    0 -> "New"
+    1 -> "In Progress"
+    2 -> "Completed"
+    _ -> "Cancelled"
+
+
+renderCreatorDropdown: Model -> Html Msg
+renderCreatorDropdown model =
+   let
+
+          dropDownClass =
+              "dropdown-select"
+  in
+  div [ class dropDownClass ]
+                [ button
+                    [
+                     onClick ToggleCreatorDropdown
+                     , class "selectedoption button"
+                    , id "orgnode_dd"
+                    ]
+                    [ span [ class "overflowcontrol" ]
+                        [ text "Select - Creator" ]
+                    ]
+                , ul
+                    [ id "orgnode-dd-listbox"
+                    , class "option"
+
+                    , class "options nobullets"
+                    , tabindex -1
+                    ]
+                    (if model.filterValues.showCreatorDropdown
+                      then
+                        (List.map
+                            (\x ->
+                                li
+                                    [ attribute "aria-selected" "true"
+                                    , class ""
+                                    , onClick (FilterCreatorRecord x)
+                                    , id (x.email ++ "_li_c")
+                                    , attribute "role" "option"
+                                    ]
+                                    [ text x.name ]
+                            )
+                            model.userList
+                        )
+                    else
+                      []
+                    )
+                ,ul []  (List.map (\x -> li[] [text x.name] ) model.filterValues.selectedCreatorList)
+                ]
+
+
+
+
+renderOwnerDropdown: Model -> Html Msg
+renderOwnerDropdown model=
+   let
+
+          dropDownClass =
+              "dropdown-select"
+  in
+  div [ class dropDownClass ]
+                [ button
+                    [
+                     onClick ToggleOwnerDropdown
+                     , class "selectedoption button"
+                    , id "orgnode_dd"
+                    ]
+                    [ span [ class "overflowcontrol" ]
+                        [ text "Select-Owner" ]
+                    ]
+                , ul
+                    [ id "orgnode-dd-listbox"
+                    , class "option"
+
+                    , class "options nobullets"
+                    , tabindex -1
+                    ]
+                    (if model.filterValues.showOwnerDropdown then
+                    (List.map
+                        (\x ->
+                            li
+                                [ attribute "aria-selected" "true"
+                                , class ""
+                                , onClick (FilterOwnerRecord x)
+                                , id (x.email ++ "_li")
+                                , attribute "role" "option"
+                                ]
+                                [ text x.name ]
+                        )
+                        model.userList
+                    )
+                    else
+                    [])
+                ,ul []  (List.map (\x -> li[] [text x.name] ) model.filterValues.selectedOwnerList)
+                ]
