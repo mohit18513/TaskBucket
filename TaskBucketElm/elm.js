@@ -7127,8 +7127,16 @@ var author$project$Main$ShowFilterPanel = {$: 'ShowFilterPanel'};
 var author$project$Main$EnterUseEmail = function (a) {
 	return {$: 'EnterUseEmail', a: a};
 };
+<<<<<<< HEAD
 var author$project$Main$EnterUserPassword = function (a) {
 	return {$: 'EnterUserPassword', a: a};
+=======
+var author$project$Main$InputTaskDueDate = function (a) {
+	return {$: 'InputTaskDueDate', a: a};
+};
+var author$project$Main$InputTaskTitle = function (a) {
+	return {$: 'InputTaskTitle', a: a};
+>>>>>>> 902ed3a761d68426fb3092d8f8b2ba83b31d35ed
 };
 var author$project$Main$Login = {$: 'Login'};
 var elm$json$Json$Decode$map = _Json_map1;
@@ -7476,7 +7484,7 @@ var author$project$Main$getStatus = function (status) {
 		case 0:
 			return 'New';
 		case 1:
-			return 'In Progress';
+			return 'In-Progress';
 		case 2:
 			return 'Completed';
 		default:
@@ -7562,6 +7570,7 @@ var author$project$Main$renderCreateCommentView = function (model) {
 };
 var elm$html$Html$li = _VirtualDom_node('li');
 var elm$html$Html$ol = _VirtualDom_node('ol');
+<<<<<<< HEAD
 var author$project$Main$renderTaskComments = F2(
 	function (comments, userList) {
 		return A2(
@@ -7631,6 +7640,56 @@ var author$project$Main$renderTaskComments = F2(
 				},
 				comments));
 	});
+=======
+var author$project$Main$renderTaskComments = function (comments) {
+	return A2(
+		elm$html$Html$ol,
+		_List_Nil,
+		A2(
+			elm$core$List$map,
+			function (comment) {
+				return A2(
+					elm$html$Html$li,
+					_List_Nil,
+					_List_fromArray(
+						[
+							A2(
+							elm$html$Html$div,
+							_List_fromArray(
+								[
+									elm$html$Html$Attributes$class('list-item')
+								]),
+							_List_fromArray(
+								[
+									A2(
+									elm$html$Html$div,
+									_List_fromArray(
+										[
+											elm$html$Html$Attributes$class('list-header')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											elm$html$Html$div,
+											_List_Nil,
+											_List_fromArray(
+												[
+													A2(
+													elm$html$Html$textarea,
+													_List_Nil,
+													_List_fromArray(
+														[
+															elm$html$Html$text(comment.text)
+														]))
+												]))
+										]))
+								]))
+						]));
+			},
+			comments));
+};
+var elm$html$Html$span = _VirtualDom_node('span');
+>>>>>>> 902ed3a761d68426fb3092d8f8b2ba83b31d35ed
 var author$project$Main$renderTaskDetails = F2(
 	function (task, model) {
 		var _n0 = A2(elm$core$Debug$log, 'task details===', task);
@@ -7644,6 +7703,20 @@ var author$project$Main$renderTaskDetails = F2(
 					_List_Nil,
 					_List_fromArray(
 						[
+							A2(
+							elm$html$Html$label,
+							_List_Nil,
+							_List_fromArray(
+								[
+									elm$html$Html$text('  Description: ')
+								])),
+							A2(
+							elm$html$Html$span,
+							_List_Nil,
+							_List_fromArray(
+								[
+									elm$html$Html$text(task.description)
+								])),
 							A2(
 							elm$html$Html$label,
 							_List_Nil,
@@ -7779,54 +7852,71 @@ var author$project$Main$renderList = F2(
 																elm$html$Html$text('Title: ')
 															])),
 														A2(
-														elm$html$Html$label,
+														elm$html$Html$span,
 														_List_Nil,
 														_List_fromArray(
 															[
 																elm$html$Html$text(l.title)
 															])),
 														A2(
-														elm$html$Html$label,
-														_List_Nil,
+														elm$html$Html$div,
 														_List_fromArray(
 															[
-																elm$html$Html$text('  Description: ')
+																elm$html$Html$Attributes$class('status')
+															]),
+														_List_fromArray(
+															[
+																A2(
+																elm$html$Html$span,
+																_List_fromArray(
+																	[
+																		elm$html$Html$Attributes$class(
+																		author$project$Main$getStatus(l.status))
+																	]),
+																_List_fromArray(
+																	[
+																		elm$html$Html$text(
+																		author$project$Main$getStatus(l.status))
+																	]))
 															])),
 														A2(
-														elm$html$Html$label,
-														_List_Nil,
+														elm$html$Html$div,
 														_List_fromArray(
 															[
-																elm$html$Html$text(l.description)
-															])),
-														A2(
-														elm$html$Html$label,
-														_List_Nil,
+																elm$html$Html$Attributes$class('comment')
+															]),
 														_List_fromArray(
 															[
-																elm$html$Html$text('  Status: ')
-															])),
-														A2(
-														elm$html$Html$label,
-														_List_Nil,
-														_List_fromArray(
-															[
-																elm$html$Html$text(
-																author$project$Main$getStatus(l.status))
-															])),
-														A2(
-														elm$html$Html$label,
-														_List_Nil,
-														_List_fromArray(
-															[
-																elm$html$Html$text('  Commented On: ')
-															])),
-														A2(
-														elm$html$Html$label,
-														_List_Nil,
-														_List_fromArray(
-															[
+<<<<<<< HEAD
 																elm$html$Html$text(l.commentedOn)
+=======
+																A2(
+																elm$html$Html$label,
+																_List_Nil,
+																_List_fromArray(
+																	[
+																		elm$html$Html$text('  Commented On: ')
+																	])),
+																A2(
+																elm$html$Html$span,
+																_List_Nil,
+																_List_fromArray(
+																	[
+																		elm$html$Html$text(l.commentedOn)
+																	]))
+															])),
+														A2(
+														elm$html$Html$button,
+														_List_fromArray(
+															[
+																elm$html$Html$Attributes$class('delete'),
+																elm$html$Html$Events$onClick(
+																author$project$Main$DeleteIt(l.taskId))
+															]),
+														_List_fromArray(
+															[
+																elm$html$Html$text('Delete')
+>>>>>>> 902ed3a761d68426fb3092d8f8b2ba83b31d35ed
 															]))
 													])),
 												A2(
@@ -7918,7 +8008,6 @@ var author$project$Main$ToggleCreatorDropdown = {$: 'ToggleCreatorDropdown'};
 var elm$core$Basics$negate = function (n) {
 	return -n;
 };
-var elm$html$Html$span = _VirtualDom_node('span');
 var elm$html$Html$ul = _VirtualDom_node('ul');
 var elm$virtual_dom$VirtualDom$attribute = F2(
 	function (key, value) {
@@ -7997,7 +8086,10 @@ var author$project$Main$renderCreatorDropdown = function (model) {
 					model.userList) : _List_Nil),
 				A2(
 				elm$html$Html$ul,
-				_List_Nil,
+				_List_fromArray(
+					[
+						elm$html$Html$Attributes$class('selected_option')
+					]),
 				A2(
 					elm$core$List$map,
 					function (x) {
@@ -8078,7 +8170,10 @@ var author$project$Main$renderOwnerDropdown = function (model) {
 					model.userList) : _List_Nil),
 				A2(
 				elm$html$Html$ul,
-				_List_Nil,
+				_List_fromArray(
+					[
+						elm$html$Html$Attributes$class('selected_option')
+					]),
 				A2(
 					elm$core$List$map,
 					function (x) {
@@ -8296,7 +8391,8 @@ var author$project$Main$view = function (model) {
 						elm$html$Html$button,
 						_List_fromArray(
 							[
-								elm$html$Html$Events$onClick(author$project$Main$CreateTask)
+								elm$html$Html$Events$onClick(author$project$Main$CreateTask),
+								elm$html$Html$Attributes$class('btn-secondary')
 							]),
 						_List_fromArray(
 							[
@@ -8306,7 +8402,8 @@ var author$project$Main$view = function (model) {
 						elm$html$Html$button,
 						_List_fromArray(
 							[
-								elm$html$Html$Events$onClick(author$project$Main$ShowFilterPanel)
+								elm$html$Html$Events$onClick(author$project$Main$ShowFilterPanel),
+								elm$html$Html$Attributes$class('btn-secondary')
 							]),
 						_List_fromArray(
 							[
