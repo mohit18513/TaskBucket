@@ -578,17 +578,18 @@ renderList lst model =
                 li [  ]
                    [ div [class "list-item"]
                            [ div [class "list-header"][div[onClick (ShowTaskDetails l)][label [] [text "Title: "]
-                            , label [] [text l.title]
-                            , label [] [text "  Description: "]
-                            , label [] [text (l.description)]
-                            , label [] [text "  Status: "]
-                            , label [] [text (getStatus l.status)]
-                            , label [] [text "  Commented On: "]
-                            , label [] [text l.commentedOn]]
-                            , button [ onClick (DeleteTask l)] [text "Delete"]
-                            --, button [ class "button", onClick (AddComment (defaultComment model.user l))][text "Add Comment"]]
-                            --, button [ class "button", onClick (CreateComment l) ][text "Add Comment"]
-                            --, button [ class "button", onClick (FetchComments  l)][text "Show Comments"]]
+                            , span [] [text l.title]
+                            , div[class "status"][
+                               span [ class (getStatus l.status)] [text (getStatus l.status)]
+                            ]
+                            , div[class "comment"][
+                              label [] [text "  Commented On: "]
+                               , span [] [text l.commentedOn]
+                            ]
+                            , button [ class "delete", onClick (DeleteTask l)] [text "Delete"]]
+                            --, button [ class "button-tertiary", onClick (AddComment (defaultComment model.user l))][text "Add Comment"]]
+                            --, button [ class "button-tertiary", onClick (CreateComment l) ][text "Add Comment"]
+                            --, button [ class "button-tertiary", onClick (FetchComments  l)][text "Show Comments"]]
                             , if l.showDetails then renderTaskDetails l model else text ""
                             ]
                             -- ,div[class "body"][
@@ -625,7 +626,9 @@ renderTaskDetails task model =
   in
       div []
         [ div []
-            [ label [][ text "Owner: "]
+            [ label [] [text "  Description: "]
+            , span [] [text (task.description)]
+            , label [][ text "Owner: "]
             , label [] [text (getUserName model.userList task.ownerId)]
             , label [][ text "  Due Date: "]
             , label [] [text task.due_date]
@@ -673,18 +676,18 @@ view model =
           False
     isUserNotLoggedIn = model.user == emptyUser
   in
-    if isUserNotLoggedIn then loginView model else div [][
-      div [class "header"][
-      h1 [class "headerStyle"] [ text "Dashboard" ]
-      , button [ onClick CreateTask ] [text "Create Task"]
-      , button [ onClick ShowFilterPanel ] [text "Filter Tasks"]
-      , button [ onClick LogOut ] [text "LogOut"]
-      ]
-      ,div [class "panel"]
-        [
-        renderDashboard model
-        , if model.renderView == "CreateTask" then div [ classList [( "mini-panel", True), ("show", openSidePanel),  ("hide", not openSidePanel)] ][ renderCreateTaskView model ] else text ""
-        , if model.renderView == "FilterTasks" then div [ classList [( "mini-panel", True), ("show", openSidePanel), ("hide", not openSidePanel)] ][ renderFilterView model ] else text ""
+  if isUserNotLoggedIn then loginView model else div[][
+    div[class "header"][
+    h1 [class "headerStyle"] [ text "Dashboard" ]
+    , button [ onClick CreateTask, class "btn-secondary" ] [text "Create Task"]
+    , button [ onClick ShowFilterPanel, class "btn-secondary" ] [text "Filter Tasks"]
+    , button [ onClick LogOut ] [text "LogOut"]
+    ]
+    ,div [class "panel"]
+      [
+      renderDashboard model
+      , if model.renderView == "CreateTask" then div [ classList [( "mini-panel", True), ("show", openSidePanel),  ("hide", not openSidePanel)] ][ renderCreateTaskView model ] else text ""
+      , if model.renderView == "FilterTasks" then div [ classList [( "mini-panel", True), ("show", openSidePanel), ("hide", not openSidePanel)] ][ renderFilterView model ] else text ""
         ]
       ]
 
@@ -980,7 +983,7 @@ getStatus : Int -> String
 getStatus status =
   case status of
     0 -> "New"
-    1 -> "In Progress"
+    1 -> "In-Progress"
     2 -> "Completed"
     _ -> "Cancelled"
 
@@ -1027,7 +1030,7 @@ renderCreatorDropdown model =
                     else
                       []
                     )
-                ,ul []  (List.map (\x -> li[] [text x.name] ) model.filterValues.selectedCreatorList)
+                ,ul [class "selected_option"]  (List.map (\x -> li[] [text x.name] ) model.filterValues.selectedCreatorList)
                 ]
 
 
@@ -1073,41 +1076,42 @@ renderOwnerDropdown model=
                     )
                     else
                     [])
-                ,ul []  (List.map (\x -> li[] [text x.name] ) model.filterValues.selectedOwnerList)
+                ,ul [class "selected_option"]  (List.map (\x -> li[] [text x.name] ) model.filterValues.selectedOwnerList)
                 ]
 
 renderCreateTaskOwnerDropdown: Model -> Html Msg
 renderCreateTaskOwnerDropdown model=
-   let
-      dropDownClass = "dropdown-select"
-   in
-   div [ class dropDownClass ]
-                [ button
-                    [
-                     class "selectedoption button"
-                    , id "orgnode_dd"
-                    ]
-                    [ span [ class "overflowcontrol" ]
-                        [ text "Select-Owner", text model.tempCreatTaskOwnerName]
-                    ]
-                , ul
-                    [ id "orgnode-dd-listbox"
-                    , class "option"
-                    , class "options nobullets"
-                    , tabindex -1
-                    ]
-                    (List.map
-                        (\x ->
-                            li
-                                [ attribute "aria-selected" "true"
-                                , class ""
-                                , onClick (SetCreateTaskOwner x)
-                                , id (x.email ++ "_li")
-                                , attribute "role" "option"
-                                ]
-                                [ text x.name ]
-                        )
-                        model.userList
-                    )
-                ,ul []  (List.map (\x -> li[] [text x.name] ) model.filterValues.selectedOwnerList)
-                ]
+  let
+     dropDownClass = "dropdown-select"
+  in
+  div [ class "dropDownClass textareaBtn" ]
+               [ button
+                   [
+                    class "selectedoption button"
+                   , id "orgnode_dd"
+                   ]
+                   [ span [ class "overflowcontrol" ]
+                       [ text "Select-Owner"]
+                   ]
+               , span[ class "selectedOwner"][text model.tempCreatTaskOwnerName]
+               , ul
+                   [ id "orgnode-dd-listbox"
+                   , class "option"
+                   , class "options nobullets"
+                   , tabindex -1
+                   ]
+                   (List.map
+                       (\x ->
+                           li
+                               [ attribute "aria-selected" "true"
+                               , class ""
+                               , onClick (SetCreateTaskOwner x)
+                               , id (x.email ++ "_li")
+                               , attribute "role" "option"
+                               ]
+                               [ text x.name ]
+                       )
+                       model.userList
+                   )
+               ,ul []  (List.map (\x -> li[] [text x.name] ) model.filterValues.selectedOwnerList)
+               ]
