@@ -6046,230 +6046,14 @@ var author$project$Main$getUsersRequest = elm$http$Http$get(
 		expect: A2(elm$http$Http$expectJson, author$project$Main$UsersFetched, author$project$Main$userListDecoder),
 		url: 'http://172.15.3.209:9999/task-bucket-api/users'
 	});
-var elm$core$Maybe$withDefault = F2(
-	function (_default, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return value;
-		} else {
-			return _default;
-		}
-	});
 var elm$core$Platform$Cmd$batch = _Platform_batch;
-var author$project$Main$init = function (maybeModel) {
+var author$project$Main$init = function (model) {
 	return _Utils_Tuple2(
-		A2(elm$core$Maybe$withDefault, author$project$Main$emptyModel, maybeModel),
+		author$project$Main$emptyModel,
 		elm$core$Platform$Cmd$batch(
 			_List_fromArray(
 				[author$project$Main$getTasksRequest, author$project$Main$getUsersRequest])));
 };
-var elm$json$Json$Encode$bool = _Json_wrap;
-var elm$json$Json$Encode$int = _Json_wrap;
-var elm$json$Json$Encode$list = F2(
-	function (func, entries) {
-		return _Json_wrap(
-			A3(
-				elm$core$List$foldl,
-				_Json_addEntry(func),
-				_Json_emptyArray(_Utils_Tuple0),
-				entries));
-	});
-var elm$json$Json$Encode$object = function (pairs) {
-	return _Json_wrap(
-		A3(
-			elm$core$List$foldl,
-			F2(
-				function (_n0, obj) {
-					var k = _n0.a;
-					var v = _n0.b;
-					return A3(_Json_addField, k, v, obj);
-				}),
-			_Json_emptyObject(_Utils_Tuple0),
-			pairs));
-};
-var elm$json$Json$Encode$string = _Json_wrap;
-var author$project$Main$setStorage = _Platform_outgoingPort(
-	'setStorage',
-	function ($) {
-		return elm$json$Json$Encode$object(
-			_List_fromArray(
-				[
-					_Utils_Tuple2(
-					'commentList',
-					elm$json$Json$Encode$list(
-						function ($) {
-							return elm$json$Json$Encode$object(
-								_List_fromArray(
-									[
-										_Utils_Tuple2(
-										'commentId',
-										elm$json$Json$Encode$int($.commentId)),
-										_Utils_Tuple2(
-										'createdBy',
-										elm$json$Json$Encode$int($.createdBy)),
-										_Utils_Tuple2(
-										'taskId',
-										elm$json$Json$Encode$int($.taskId)),
-										_Utils_Tuple2(
-										'text',
-										elm$json$Json$Encode$string($.text))
-									]));
-						})($.commentList)),
-					_Utils_Tuple2(
-					'currentComment',
-					function ($) {
-						return elm$json$Json$Encode$object(
-							_List_fromArray(
-								[
-									_Utils_Tuple2(
-									'commentId',
-									elm$json$Json$Encode$int($.commentId)),
-									_Utils_Tuple2(
-									'createdBy',
-									elm$json$Json$Encode$int($.createdBy)),
-									_Utils_Tuple2(
-									'taskId',
-									elm$json$Json$Encode$int($.taskId)),
-									_Utils_Tuple2(
-									'text',
-									elm$json$Json$Encode$string($.text))
-								]));
-					}($.currentComment)),
-					_Utils_Tuple2(
-					'newTask',
-					function ($) {
-						return elm$json$Json$Encode$object(
-							_List_fromArray(
-								[
-									_Utils_Tuple2(
-									'commentedOn',
-									elm$json$Json$Encode$string($.commentedOn)),
-									_Utils_Tuple2(
-									'createdOn',
-									elm$json$Json$Encode$string($.createdOn)),
-									_Utils_Tuple2(
-									'created_by',
-									elm$json$Json$Encode$int($.created_by)),
-									_Utils_Tuple2(
-									'description',
-									elm$json$Json$Encode$string($.description)),
-									_Utils_Tuple2(
-									'due_date',
-									elm$json$Json$Encode$string($.due_date)),
-									_Utils_Tuple2(
-									'isTaskCompleted',
-									elm$json$Json$Encode$bool($.isTaskCompleted)),
-									_Utils_Tuple2(
-									'isTaskDeleted',
-									elm$json$Json$Encode$bool($.isTaskDeleted)),
-									_Utils_Tuple2(
-									'ownerId',
-									elm$json$Json$Encode$int($.ownerId)),
-									_Utils_Tuple2(
-									'showDetails',
-									elm$json$Json$Encode$bool($.showDetails)),
-									_Utils_Tuple2(
-									'status',
-									elm$json$Json$Encode$int($.status)),
-									_Utils_Tuple2(
-									'taskId',
-									elm$json$Json$Encode$int($.taskId)),
-									_Utils_Tuple2(
-									'title',
-									elm$json$Json$Encode$string($.title))
-								]));
-					}($.newTask)),
-					_Utils_Tuple2(
-					'renderView',
-					elm$json$Json$Encode$string($.renderView)),
-					_Utils_Tuple2(
-					'taskCount',
-					elm$json$Json$Encode$int($.taskCount)),
-					_Utils_Tuple2(
-					'taskList',
-					elm$json$Json$Encode$list(
-						function ($) {
-							return elm$json$Json$Encode$object(
-								_List_fromArray(
-									[
-										_Utils_Tuple2(
-										'commentedOn',
-										elm$json$Json$Encode$string($.commentedOn)),
-										_Utils_Tuple2(
-										'createdOn',
-										elm$json$Json$Encode$string($.createdOn)),
-										_Utils_Tuple2(
-										'created_by',
-										elm$json$Json$Encode$int($.created_by)),
-										_Utils_Tuple2(
-										'description',
-										elm$json$Json$Encode$string($.description)),
-										_Utils_Tuple2(
-										'due_date',
-										elm$json$Json$Encode$string($.due_date)),
-										_Utils_Tuple2(
-										'isTaskCompleted',
-										elm$json$Json$Encode$bool($.isTaskCompleted)),
-										_Utils_Tuple2(
-										'isTaskDeleted',
-										elm$json$Json$Encode$bool($.isTaskDeleted)),
-										_Utils_Tuple2(
-										'ownerId',
-										elm$json$Json$Encode$int($.ownerId)),
-										_Utils_Tuple2(
-										'showDetails',
-										elm$json$Json$Encode$bool($.showDetails)),
-										_Utils_Tuple2(
-										'status',
-										elm$json$Json$Encode$int($.status)),
-										_Utils_Tuple2(
-										'taskId',
-										elm$json$Json$Encode$int($.taskId)),
-										_Utils_Tuple2(
-										'title',
-										elm$json$Json$Encode$string($.title))
-									]));
-						})($.taskList)),
-					_Utils_Tuple2(
-					'user',
-					function ($) {
-						return elm$json$Json$Encode$object(
-							_List_fromArray(
-								[
-									_Utils_Tuple2(
-									'email',
-									elm$json$Json$Encode$string($.email)),
-									_Utils_Tuple2(
-									'id',
-									elm$json$Json$Encode$int($.id)),
-									_Utils_Tuple2(
-									'name',
-									elm$json$Json$Encode$string($.name))
-								]));
-					}($.user)),
-					_Utils_Tuple2(
-					'userList',
-					elm$json$Json$Encode$list(
-						function ($) {
-							return elm$json$Json$Encode$object(
-								_List_fromArray(
-									[
-										_Utils_Tuple2(
-										'email',
-										elm$json$Json$Encode$string($.email)),
-										_Utils_Tuple2(
-										'id',
-										elm$json$Json$Encode$int($.id)),
-										_Utils_Tuple2(
-										'name',
-										elm$json$Json$Encode$string($.name))
-									]));
-						})($.userList)),
-					_Utils_Tuple2(
-					'visibility',
-					elm$json$Json$Encode$string($.visibility))
-				]));
-	});
 var author$project$Main$CommentCreated = function (a) {
 	return {$: 'CommentCreated', a: a};
 };
@@ -6292,6 +6076,21 @@ var author$project$Main$commentDecoder = A4(
 				'commentId',
 				elm$json$Json$Decode$int,
 				elm$json$Json$Decode$succeed(author$project$Main$Comment)))));
+var elm$json$Json$Encode$int = _Json_wrap;
+var elm$json$Json$Encode$object = function (pairs) {
+	return _Json_wrap(
+		A3(
+			elm$core$List$foldl,
+			F2(
+				function (_n0, obj) {
+					var k = _n0.a;
+					var v = _n0.b;
+					return A3(_Json_addField, k, v, obj);
+				}),
+			_Json_emptyObject(_Utils_Tuple0),
+			pairs));
+};
+var elm$json$Json$Encode$string = _Json_wrap;
 var author$project$Main$createCommentEncoder = F3(
 	function (user, task, comment) {
 		return elm$json$Json$Encode$object(
@@ -6611,20 +6410,6 @@ var author$project$Main$update = F2(
 					author$project$Main$getCommentsRequest(currentTask));
 		}
 	});
-var author$project$Main$updateWithStorage = F2(
-	function (msg, model) {
-		var _n0 = A2(author$project$Main$update, msg, model);
-		var newModel = _n0.a;
-		var cmds = _n0.b;
-		return _Utils_Tuple2(
-			newModel,
-			elm$core$Platform$Cmd$batch(
-				_List_fromArray(
-					[
-						author$project$Main$setStorage(newModel),
-						cmds
-					])));
-	});
 var author$project$Main$CreateTask = {$: 'CreateTask'};
 var author$project$Main$AddTask = {$: 'AddTask'};
 var author$project$Main$CancelTask = {$: 'CancelTask'};
@@ -6831,6 +6616,7 @@ var author$project$Main$keep = F2(
 				return taskList;
 		}
 	});
+var elm$json$Json$Encode$bool = _Json_wrap;
 var elm$html$Html$Attributes$boolProperty = F2(
 	function (key, bool) {
 		return A2(
@@ -6894,6 +6680,15 @@ var elm$core$List$head = function (list) {
 		return elm$core$Maybe$Nothing;
 	}
 };
+var elm$core$Maybe$withDefault = F2(
+	function (_default, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return value;
+		} else {
+			return _default;
+		}
+	});
 var author$project$Main$getUserName = F2(
 	function (users, id) {
 		var user = A2(
@@ -7571,7 +7366,7 @@ var author$project$Main$main = elm$browser$Browser$document(
 		subscriptions: function (_n0) {
 			return elm$core$Platform$Sub$none;
 		},
-		update: author$project$Main$updateWithStorage,
+		update: author$project$Main$update,
 		view: function (model) {
 			return {
 				body: _List_fromArray(
@@ -7583,73 +7378,40 @@ var author$project$Main$main = elm$browser$Browser$document(
 		}
 	});
 _Platform_export({'Main':{'init':author$project$Main$main(
-	elm$json$Json$Decode$oneOf(
-		_List_fromArray(
-			[
-				elm$json$Json$Decode$null(elm$core$Maybe$Nothing),
-				A2(
-				elm$json$Json$Decode$map,
-				elm$core$Maybe$Just,
-				A2(
-					elm$json$Json$Decode$andThen,
-					function (visibility) {
-						return A2(
-							elm$json$Json$Decode$andThen,
-							function (userList) {
-								return A2(
-									elm$json$Json$Decode$andThen,
-									function (user) {
-										return A2(
-											elm$json$Json$Decode$andThen,
-											function (taskList) {
-												return A2(
-													elm$json$Json$Decode$andThen,
-													function (taskCount) {
-														return A2(
-															elm$json$Json$Decode$andThen,
-															function (renderView) {
-																return A2(
-																	elm$json$Json$Decode$andThen,
-																	function (newTask) {
-																		return A2(
-																			elm$json$Json$Decode$andThen,
-																			function (currentComment) {
-																				return A2(
-																					elm$json$Json$Decode$andThen,
-																					function (commentList) {
-																						return elm$json$Json$Decode$succeed(
-																							{commentList: commentList, currentComment: currentComment, newTask: newTask, renderView: renderView, taskCount: taskCount, taskList: taskList, user: user, userList: userList, visibility: visibility});
-																					},
-																					A2(
-																						elm$json$Json$Decode$field,
-																						'commentList',
-																						elm$json$Json$Decode$list(
-																							A2(
-																								elm$json$Json$Decode$andThen,
-																								function (text) {
-																									return A2(
-																										elm$json$Json$Decode$andThen,
-																										function (taskId) {
-																											return A2(
-																												elm$json$Json$Decode$andThen,
-																												function (createdBy) {
-																													return A2(
-																														elm$json$Json$Decode$andThen,
-																														function (commentId) {
-																															return elm$json$Json$Decode$succeed(
-																																{commentId: commentId, createdBy: createdBy, taskId: taskId, text: text});
-																														},
-																														A2(elm$json$Json$Decode$field, 'commentId', elm$json$Json$Decode$int));
-																												},
-																												A2(elm$json$Json$Decode$field, 'createdBy', elm$json$Json$Decode$int));
-																										},
-																										A2(elm$json$Json$Decode$field, 'taskId', elm$json$Json$Decode$int));
-																								},
-																								A2(elm$json$Json$Decode$field, 'text', elm$json$Json$Decode$string)))));
-																			},
-																			A2(
-																				elm$json$Json$Decode$field,
-																				'currentComment',
+	A2(
+		elm$json$Json$Decode$andThen,
+		function (visibility) {
+			return A2(
+				elm$json$Json$Decode$andThen,
+				function (userList) {
+					return A2(
+						elm$json$Json$Decode$andThen,
+						function (user) {
+							return A2(
+								elm$json$Json$Decode$andThen,
+								function (taskList) {
+									return A2(
+										elm$json$Json$Decode$andThen,
+										function (taskCount) {
+											return A2(
+												elm$json$Json$Decode$andThen,
+												function (renderView) {
+													return A2(
+														elm$json$Json$Decode$andThen,
+														function (newTask) {
+															return A2(
+																elm$json$Json$Decode$andThen,
+																function (currentComment) {
+																	return A2(
+																		elm$json$Json$Decode$andThen,
+																		function (commentList) {
+																			return elm$json$Json$Decode$succeed(
+																				{commentList: commentList, currentComment: currentComment, newTask: newTask, renderView: renderView, taskCount: taskCount, taskList: taskList, user: user, userList: userList, visibility: visibility});
+																		},
+																		A2(
+																			elm$json$Json$Decode$field,
+																			'commentList',
+																			elm$json$Json$Decode$list(
 																				A2(
 																					elm$json$Json$Decode$andThen,
 																					function (text) {
@@ -7671,187 +7433,212 @@ _Platform_export({'Main':{'init':author$project$Main$main(
 																							},
 																							A2(elm$json$Json$Decode$field, 'taskId', elm$json$Json$Decode$int));
 																					},
-																					A2(elm$json$Json$Decode$field, 'text', elm$json$Json$Decode$string))));
-																	},
+																					A2(elm$json$Json$Decode$field, 'text', elm$json$Json$Decode$string)))));
+																},
+																A2(
+																	elm$json$Json$Decode$field,
+																	'currentComment',
 																	A2(
-																		elm$json$Json$Decode$field,
-																		'newTask',
-																		A2(
-																			elm$json$Json$Decode$andThen,
-																			function (title) {
-																				return A2(
-																					elm$json$Json$Decode$andThen,
-																					function (taskId) {
-																						return A2(
-																							elm$json$Json$Decode$andThen,
-																							function (status) {
-																								return A2(
-																									elm$json$Json$Decode$andThen,
-																									function (showDetails) {
-																										return A2(
-																											elm$json$Json$Decode$andThen,
-																											function (ownerId) {
-																												return A2(
-																													elm$json$Json$Decode$andThen,
-																													function (isTaskDeleted) {
-																														return A2(
-																															elm$json$Json$Decode$andThen,
-																															function (isTaskCompleted) {
-																																return A2(
-																																	elm$json$Json$Decode$andThen,
-																																	function (due_date) {
-																																		return A2(
-																																			elm$json$Json$Decode$andThen,
-																																			function (description) {
-																																				return A2(
-																																					elm$json$Json$Decode$andThen,
-																																					function (created_by) {
-																																						return A2(
-																																							elm$json$Json$Decode$andThen,
-																																							function (createdOn) {
-																																								return A2(
-																																									elm$json$Json$Decode$andThen,
-																																									function (commentedOn) {
-																																										return elm$json$Json$Decode$succeed(
-																																											{commentedOn: commentedOn, createdOn: createdOn, created_by: created_by, description: description, due_date: due_date, isTaskCompleted: isTaskCompleted, isTaskDeleted: isTaskDeleted, ownerId: ownerId, showDetails: showDetails, status: status, taskId: taskId, title: title});
-																																									},
-																																									A2(elm$json$Json$Decode$field, 'commentedOn', elm$json$Json$Decode$string));
-																																							},
-																																							A2(elm$json$Json$Decode$field, 'createdOn', elm$json$Json$Decode$string));
-																																					},
-																																					A2(elm$json$Json$Decode$field, 'created_by', elm$json$Json$Decode$int));
-																																			},
-																																			A2(elm$json$Json$Decode$field, 'description', elm$json$Json$Decode$string));
-																																	},
-																																	A2(elm$json$Json$Decode$field, 'due_date', elm$json$Json$Decode$string));
-																															},
-																															A2(elm$json$Json$Decode$field, 'isTaskCompleted', elm$json$Json$Decode$bool));
-																													},
-																													A2(elm$json$Json$Decode$field, 'isTaskDeleted', elm$json$Json$Decode$bool));
-																											},
-																											A2(elm$json$Json$Decode$field, 'ownerId', elm$json$Json$Decode$int));
-																									},
-																									A2(elm$json$Json$Decode$field, 'showDetails', elm$json$Json$Decode$bool));
-																							},
-																							A2(elm$json$Json$Decode$field, 'status', elm$json$Json$Decode$int));
-																					},
-																					A2(elm$json$Json$Decode$field, 'taskId', elm$json$Json$Decode$int));
-																			},
-																			A2(elm$json$Json$Decode$field, 'title', elm$json$Json$Decode$string))));
-															},
-															A2(elm$json$Json$Decode$field, 'renderView', elm$json$Json$Decode$string));
-													},
-													A2(elm$json$Json$Decode$field, 'taskCount', elm$json$Json$Decode$int));
-											},
-											A2(
-												elm$json$Json$Decode$field,
-												'taskList',
-												elm$json$Json$Decode$list(
-													A2(
-														elm$json$Json$Decode$andThen,
-														function (title) {
-															return A2(
-																elm$json$Json$Decode$andThen,
-																function (taskId) {
-																	return A2(
 																		elm$json$Json$Decode$andThen,
-																		function (status) {
+																		function (text) {
 																			return A2(
 																				elm$json$Json$Decode$andThen,
-																				function (showDetails) {
+																				function (taskId) {
 																					return A2(
 																						elm$json$Json$Decode$andThen,
-																						function (ownerId) {
+																						function (createdBy) {
 																							return A2(
 																								elm$json$Json$Decode$andThen,
-																								function (isTaskDeleted) {
+																								function (commentId) {
+																									return elm$json$Json$Decode$succeed(
+																										{commentId: commentId, createdBy: createdBy, taskId: taskId, text: text});
+																								},
+																								A2(elm$json$Json$Decode$field, 'commentId', elm$json$Json$Decode$int));
+																						},
+																						A2(elm$json$Json$Decode$field, 'createdBy', elm$json$Json$Decode$int));
+																				},
+																				A2(elm$json$Json$Decode$field, 'taskId', elm$json$Json$Decode$int));
+																		},
+																		A2(elm$json$Json$Decode$field, 'text', elm$json$Json$Decode$string))));
+														},
+														A2(
+															elm$json$Json$Decode$field,
+															'newTask',
+															A2(
+																elm$json$Json$Decode$andThen,
+																function (title) {
+																	return A2(
+																		elm$json$Json$Decode$andThen,
+																		function (taskId) {
+																			return A2(
+																				elm$json$Json$Decode$andThen,
+																				function (status) {
+																					return A2(
+																						elm$json$Json$Decode$andThen,
+																						function (showDetails) {
+																							return A2(
+																								elm$json$Json$Decode$andThen,
+																								function (ownerId) {
 																									return A2(
 																										elm$json$Json$Decode$andThen,
-																										function (isTaskCompleted) {
+																										function (isTaskDeleted) {
 																											return A2(
 																												elm$json$Json$Decode$andThen,
-																												function (due_date) {
+																												function (isTaskCompleted) {
 																													return A2(
 																														elm$json$Json$Decode$andThen,
-																														function (description) {
+																														function (due_date) {
 																															return A2(
 																																elm$json$Json$Decode$andThen,
-																																function (created_by) {
+																																function (description) {
 																																	return A2(
 																																		elm$json$Json$Decode$andThen,
-																																		function (createdOn) {
+																																		function (created_by) {
 																																			return A2(
 																																				elm$json$Json$Decode$andThen,
-																																				function (commentedOn) {
-																																					return elm$json$Json$Decode$succeed(
-																																						{commentedOn: commentedOn, createdOn: createdOn, created_by: created_by, description: description, due_date: due_date, isTaskCompleted: isTaskCompleted, isTaskDeleted: isTaskDeleted, ownerId: ownerId, showDetails: showDetails, status: status, taskId: taskId, title: title});
+																																				function (createdOn) {
+																																					return A2(
+																																						elm$json$Json$Decode$andThen,
+																																						function (commentedOn) {
+																																							return elm$json$Json$Decode$succeed(
+																																								{commentedOn: commentedOn, createdOn: createdOn, created_by: created_by, description: description, due_date: due_date, isTaskCompleted: isTaskCompleted, isTaskDeleted: isTaskDeleted, ownerId: ownerId, showDetails: showDetails, status: status, taskId: taskId, title: title});
+																																						},
+																																						A2(elm$json$Json$Decode$field, 'commentedOn', elm$json$Json$Decode$string));
 																																				},
-																																				A2(elm$json$Json$Decode$field, 'commentedOn', elm$json$Json$Decode$string));
+																																				A2(elm$json$Json$Decode$field, 'createdOn', elm$json$Json$Decode$string));
 																																		},
-																																		A2(elm$json$Json$Decode$field, 'createdOn', elm$json$Json$Decode$string));
+																																		A2(elm$json$Json$Decode$field, 'created_by', elm$json$Json$Decode$int));
 																																},
-																																A2(elm$json$Json$Decode$field, 'created_by', elm$json$Json$Decode$int));
+																																A2(elm$json$Json$Decode$field, 'description', elm$json$Json$Decode$string));
 																														},
-																														A2(elm$json$Json$Decode$field, 'description', elm$json$Json$Decode$string));
+																														A2(elm$json$Json$Decode$field, 'due_date', elm$json$Json$Decode$string));
 																												},
-																												A2(elm$json$Json$Decode$field, 'due_date', elm$json$Json$Decode$string));
+																												A2(elm$json$Json$Decode$field, 'isTaskCompleted', elm$json$Json$Decode$bool));
 																										},
-																										A2(elm$json$Json$Decode$field, 'isTaskCompleted', elm$json$Json$Decode$bool));
+																										A2(elm$json$Json$Decode$field, 'isTaskDeleted', elm$json$Json$Decode$bool));
 																								},
-																								A2(elm$json$Json$Decode$field, 'isTaskDeleted', elm$json$Json$Decode$bool));
+																								A2(elm$json$Json$Decode$field, 'ownerId', elm$json$Json$Decode$int));
 																						},
-																						A2(elm$json$Json$Decode$field, 'ownerId', elm$json$Json$Decode$int));
+																						A2(elm$json$Json$Decode$field, 'showDetails', elm$json$Json$Decode$bool));
 																				},
-																				A2(elm$json$Json$Decode$field, 'showDetails', elm$json$Json$Decode$bool));
+																				A2(elm$json$Json$Decode$field, 'status', elm$json$Json$Decode$int));
 																		},
-																		A2(elm$json$Json$Decode$field, 'status', elm$json$Json$Decode$int));
+																		A2(elm$json$Json$Decode$field, 'taskId', elm$json$Json$Decode$int));
 																},
-																A2(elm$json$Json$Decode$field, 'taskId', elm$json$Json$Decode$int));
-														},
-														A2(elm$json$Json$Decode$field, 'title', elm$json$Json$Decode$string)))));
-									},
-									A2(
-										elm$json$Json$Decode$field,
-										'user',
+																A2(elm$json$Json$Decode$field, 'title', elm$json$Json$Decode$string))));
+												},
+												A2(elm$json$Json$Decode$field, 'renderView', elm$json$Json$Decode$string));
+										},
+										A2(elm$json$Json$Decode$field, 'taskCount', elm$json$Json$Decode$int));
+								},
+								A2(
+									elm$json$Json$Decode$field,
+									'taskList',
+									elm$json$Json$Decode$list(
 										A2(
 											elm$json$Json$Decode$andThen,
-											function (name) {
+											function (title) {
 												return A2(
 													elm$json$Json$Decode$andThen,
-													function (id) {
+													function (taskId) {
 														return A2(
 															elm$json$Json$Decode$andThen,
-															function (email) {
-																return elm$json$Json$Decode$succeed(
-																	{email: email, id: id, name: name});
+															function (status) {
+																return A2(
+																	elm$json$Json$Decode$andThen,
+																	function (showDetails) {
+																		return A2(
+																			elm$json$Json$Decode$andThen,
+																			function (ownerId) {
+																				return A2(
+																					elm$json$Json$Decode$andThen,
+																					function (isTaskDeleted) {
+																						return A2(
+																							elm$json$Json$Decode$andThen,
+																							function (isTaskCompleted) {
+																								return A2(
+																									elm$json$Json$Decode$andThen,
+																									function (due_date) {
+																										return A2(
+																											elm$json$Json$Decode$andThen,
+																											function (description) {
+																												return A2(
+																													elm$json$Json$Decode$andThen,
+																													function (created_by) {
+																														return A2(
+																															elm$json$Json$Decode$andThen,
+																															function (createdOn) {
+																																return A2(
+																																	elm$json$Json$Decode$andThen,
+																																	function (commentedOn) {
+																																		return elm$json$Json$Decode$succeed(
+																																			{commentedOn: commentedOn, createdOn: createdOn, created_by: created_by, description: description, due_date: due_date, isTaskCompleted: isTaskCompleted, isTaskDeleted: isTaskDeleted, ownerId: ownerId, showDetails: showDetails, status: status, taskId: taskId, title: title});
+																																	},
+																																	A2(elm$json$Json$Decode$field, 'commentedOn', elm$json$Json$Decode$string));
+																															},
+																															A2(elm$json$Json$Decode$field, 'createdOn', elm$json$Json$Decode$string));
+																													},
+																													A2(elm$json$Json$Decode$field, 'created_by', elm$json$Json$Decode$int));
+																											},
+																											A2(elm$json$Json$Decode$field, 'description', elm$json$Json$Decode$string));
+																									},
+																									A2(elm$json$Json$Decode$field, 'due_date', elm$json$Json$Decode$string));
+																							},
+																							A2(elm$json$Json$Decode$field, 'isTaskCompleted', elm$json$Json$Decode$bool));
+																					},
+																					A2(elm$json$Json$Decode$field, 'isTaskDeleted', elm$json$Json$Decode$bool));
+																			},
+																			A2(elm$json$Json$Decode$field, 'ownerId', elm$json$Json$Decode$int));
+																	},
+																	A2(elm$json$Json$Decode$field, 'showDetails', elm$json$Json$Decode$bool));
 															},
-															A2(elm$json$Json$Decode$field, 'email', elm$json$Json$Decode$string));
+															A2(elm$json$Json$Decode$field, 'status', elm$json$Json$Decode$int));
 													},
-													A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$int));
+													A2(elm$json$Json$Decode$field, 'taskId', elm$json$Json$Decode$int));
 											},
-											A2(elm$json$Json$Decode$field, 'name', elm$json$Json$Decode$string))));
-							},
+											A2(elm$json$Json$Decode$field, 'title', elm$json$Json$Decode$string)))));
+						},
+						A2(
+							elm$json$Json$Decode$field,
+							'user',
 							A2(
-								elm$json$Json$Decode$field,
-								'userList',
-								elm$json$Json$Decode$list(
-									A2(
+								elm$json$Json$Decode$andThen,
+								function (name) {
+									return A2(
 										elm$json$Json$Decode$andThen,
-										function (name) {
+										function (id) {
 											return A2(
 												elm$json$Json$Decode$andThen,
-												function (id) {
-													return A2(
-														elm$json$Json$Decode$andThen,
-														function (email) {
-															return elm$json$Json$Decode$succeed(
-																{email: email, id: id, name: name});
-														},
-														A2(elm$json$Json$Decode$field, 'email', elm$json$Json$Decode$string));
+												function (email) {
+													return elm$json$Json$Decode$succeed(
+														{email: email, id: id, name: name});
 												},
-												A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$int));
+												A2(elm$json$Json$Decode$field, 'email', elm$json$Json$Decode$string));
 										},
-										A2(elm$json$Json$Decode$field, 'name', elm$json$Json$Decode$string)))));
-					},
-					A2(elm$json$Json$Decode$field, 'visibility', elm$json$Json$Decode$string)))
-			])))(0)}});}(this));
+										A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$int));
+								},
+								A2(elm$json$Json$Decode$field, 'name', elm$json$Json$Decode$string))));
+				},
+				A2(
+					elm$json$Json$Decode$field,
+					'userList',
+					elm$json$Json$Decode$list(
+						A2(
+							elm$json$Json$Decode$andThen,
+							function (name) {
+								return A2(
+									elm$json$Json$Decode$andThen,
+									function (id) {
+										return A2(
+											elm$json$Json$Decode$andThen,
+											function (email) {
+												return elm$json$Json$Decode$succeed(
+													{email: email, id: id, name: name});
+											},
+											A2(elm$json$Json$Decode$field, 'email', elm$json$Json$Decode$string));
+									},
+									A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$int));
+							},
+							A2(elm$json$Json$Decode$field, 'name', elm$json$Json$Decode$string)))));
+		},
+		A2(elm$json$Json$Decode$field, 'visibility', elm$json$Json$Decode$string)))(0)}});}(this));

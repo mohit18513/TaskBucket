@@ -35,19 +35,19 @@ import Debug exposing
 import Http
 
 
-main : Program (Maybe Model) Model Msg
+main : Program (Model) Model Msg
 main =
     Browser.document
         { init = init
         , view = \model -> { title = "Elm • TodoMVC", body = [view model] }
-        , update = updateWithStorage
+        , update = update
         , subscriptions = \_ -> Sub.none
         }
     --beginnerProgram { model = model, view = view1, update = update1 }
 
-init : Maybe Model -> ( Model, Cmd Msg )
-init maybeModel =
-  ( Maybe.withDefault emptyModel maybeModel
+init : Model -> ( Model, Cmd Msg )
+init model =
+  ( emptyModel
   , Cmd.batch [ getTasksRequest, getUsersRequest ]
   )
 --
@@ -163,19 +163,19 @@ type Msg
 
 
 --type Visibility1 = All | OutStanding | Completed
-port setStorage : Model -> Cmd msg
+--port setStorage : Model -> Cmd msg
 
 --    | ClearThis String
 
-updateWithStorage : Msg -> Model -> ( Model, Cmd Msg )
-updateWithStorage msg model =
-    let
-        ( newModel, cmds ) =
-            update msg model
-    in
-        ( newModel
-        , Cmd.batch [ setStorage newModel, cmds ]
-        )
+-- updateWithStorage : Msg -> Model -> ( Model, Cmd Msg )
+-- updateWithStorage msg model =
+--     let
+--         ( newModel, cmds ) =
+--             update msg model
+--     in
+--         ( newModel
+--         , Cmd.batch [ cmds ]
+--         )
 
 
 
