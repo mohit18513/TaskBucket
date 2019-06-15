@@ -35,19 +35,19 @@ import Debug exposing
 import Http
 
 
-main : Program (Model) Model Msg
+main : Program (Maybe Model) Model Msg
 main =
     Browser.document
         { init = init
         , view = \model -> { title = "Elm • TodoMVC", body = [view model] }
-        , update = update
+        , update = updateWithStorage
         , subscriptions = \_ -> Sub.none
         }
     --beginnerProgram { model = model, view = view1, update = update1 }
 
-init : Model -> ( Model, Cmd Msg )
-init model =
-  ( emptyModel
+init : Maybe Model -> ( Model, Cmd Msg )
+init maybeModel =
+  ( Maybe.withDefault emptyModel maybeModel
   , Cmd.batch [ getTasksRequest, getUsersRequest ]
   )
 --
@@ -163,19 +163,19 @@ type Msg
 
 
 --type Visibility1 = All | OutStanding | Completed
---port setStorage : Model -> Cmd msg
+port setStorage : Model -> Cmd msg
 
 --    | ClearThis String
 
--- updateWithStorage : Msg -> Model -> ( Model, Cmd Msg )
--- updateWithStorage msg model =
---     let
---         ( newModel, cmds ) =
---             update msg model
---     in
---         ( newModel
---         , Cmd.batch [ cmds ]
---         )
+updateWithStorage : Msg -> Model -> ( Model, Cmd Msg )
+updateWithStorage msg model =
+    let
+        ( newModel, cmds ) =
+            update msg model
+    in
+        ( newModel
+        , Cmd.batch [ setStorage newModel, cmds ]
+        )
 
 
 
@@ -470,7 +470,7 @@ renderCreateTaskView model =
 createTaskRequest : Task -> Cmd Msg
 createTaskRequest task =
     Http.post
-        { url = "http://172.15.3.209:9999/task-bucket-api/tasks"
+        { url = "http://localhost:9999/task-bucket-api/tasks"
         , body = Http.jsonBody (newTaskEncoder task)
         , expect = Http.expectJson TaskCreated taskDecoder
         --, timeout = Nothing
@@ -479,7 +479,7 @@ createTaskRequest task =
 getTasksRequest : Cmd Msg
 getTasksRequest =
   Http.get
-      { url = "http://172.15.3.209:9999/task-bucket-api/tasks"
+      { url = "http://localhost:9999/task-bucket-api/tasks"
       , expect = Http.expectJson TasksFetched taskListDecoder
       --, timeout = Nothing
       --, withCredentials = False
@@ -529,7 +529,7 @@ defaultComment  user task =
 createCommentRequest : User -> Task -> Comment -> Cmd Msg
 createCommentRequest user task comment =
    Http.post
-       { url = "http://172.15.3.209:9999/task-bucket-api/tasks/"++ String.fromInt(task.taskId) ++"/comments"
+       { url = "http://localhost:9999/task-bucket-api/tasks/"++ String.fromInt(task.taskId) ++"/comments"
        , body = Http.jsonBody (createCommentEncoder user task comment)
        , expect = Http.expectJson CommentCreated commentDecoder
        }
@@ -555,7 +555,7 @@ getCommentsRequest : Task -> Cmd Msg
 getCommentsRequest task =
  Http.get
      {
-     url = "http://172.15.3.209:9999/task-bucket-api/tasks/" ++ String.fromInt(task.taskId) ++"/comments"
+     url = "http://localhost:9999/task-bucket-api/tasks/" ++ String.fromInt(task.taskId) ++"/comments"
      , expect = Http.expectJson CommentsFetched commentListDecoder
      }
 
@@ -584,7 +584,7 @@ userDecoder =
 getUsersRequest : Cmd Msg
 getUsersRequest =
  Http.get
-     { url = "http://172.15.3.209:9999/task-bucket-api/users"
+     { url = "http://localhost:9999/task-bucket-api/users"
      , expect = Http.expectJson UsersFetched userListDecoder
      }
 
