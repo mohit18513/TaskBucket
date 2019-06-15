@@ -106,6 +106,7 @@ type alias FilterValues =
     { due_date : String
     , create_date : String
     , createdBy : Int
+    , last_comment_date : String
     , titleSearchText : String
     , showCreatorDropdown : Bool
     , selectedCreatorList : List User
@@ -125,9 +126,10 @@ emptyModel =
       , user = emptyUser
       , currentComment = defaultComment emptyUser emptyTask
       , commentList = []
-      , filterValues = { due_date = "2019-06-15"
-                        , create_date = "2019-6-15"
+      , filterValues = { due_date = ""
+                        , create_date = ""
                         , createdBy = 1
+                        , last_comment_date = ""
                         , titleSearchText = ""
                         , showCreatorDropdown = False
                         , selectedCreatorList = []
@@ -189,6 +191,7 @@ type Msg
     | CancelFilter
     | InputFilterDueDate String
     | InputFilterCreateDate String
+    | InputFilterLastCommentDate String
     | InputFilterTitleSearchText String
     | ToggleCreatorDropdown
     | FilterCreatorRecord User
@@ -339,6 +342,13 @@ update msg model =
            filterValuesUpdated = {filterValues | create_date = create_date}
          in
            ({model | filterValues = filterValuesUpdated}, Cmd.none)
+        InputFilterLastCommentDate last_comment_date ->
+         let
+           _ = Debug.log "InputFilterLastCommentDate ===" last_comment_date
+           filterValues = model.filterValues
+           filterValuesUpdated = {filterValues | last_comment_date = last_comment_date}
+         in
+           ({model | filterValues = filterValuesUpdated}, Cmd.none)
         InputFilterTitleSearchText searchText ->
            let
              _ = Debug.log "InputFilterTitleSearchText ===" searchText
@@ -359,7 +369,7 @@ update msg model =
               if model.filterValues.create_date == "" then
                 tempFilteredTaskList
               else
-                List.filter (\task -> task.createdOn == model.filterValues.create_date) tempFilteredTaskList
+                List.filter (\task -> String.contains model.filterValues.create_date task.createdOn) tempFilteredTaskList
 
             temp1FilteredTaskList =
               if model.filterValues.titleSearchText == "" then
@@ -389,13 +399,20 @@ update msg model =
                   else
                     List.filter (\task -> List.member task.created_by selectedOwnerIdList) temp2FilteredTaskList
 
+            temp4FilteredTaskList =
+              if model.filterValues.last_comment_date == "" then
+                temp3FilteredTaskList
+              else
+                List.filter (\task -> String.contains model.filterValues.last_comment_date task.commentedOn) temp3FilteredTaskList
 
           in
             ({ model
-                | filteredTaskList = temp3FilteredTaskList
+                | filteredTaskList = temp4FilteredTaskList
             }, Cmd.none)
         CancelFilter ->
-           ({model | filteredTaskList = model.taskList, renderView = "Dashboard"}, Cmd.none)
+           ({model | filteredTaskList = model.taskList
+                    , renderView = "Dashboard"
+                    , filterValues = emptyModel.filterValues}, Cmd.none)
 
         ShowTaskDetails currentTask ->
           let
@@ -643,15 +660,21 @@ renderFilterView model =
       , renderCreatorDropdown model
 
       , div[class "fieldset"][label [] [text "Due On : "]
-      , input [  placeholder ""
+      , input [ placeholder "YYYY-MM-DD"
               , onInput InputFilterDueDate  -- InputTask
               , value model.filterValues.due_date
               ]
               []]
       , div[class "fieldset"][label [] [text "Created On : "]
-      , input [  placeholder ""
+      , input [ placeholder "YYYY-MM-DD"
               , onInput InputFilterCreateDate  -- InputTask
               , value model.filterValues.create_date
+              ]
+              []]
+      , div[class "fieldset"][label [] [text "Last Comment On : "]
+      , input [ placeholder "YYYY-MM-DD"
+              , onInput InputFilterLastCommentDate  -- InputTask
+              , value model.filterValues.last_comment_date
               ]
               []]
       , div[class "button-collection"][ button [ class "primary", onClick ApplyFilter ] [text "Apply"]
