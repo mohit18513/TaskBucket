@@ -1,48 +1,84 @@
 package main.java.com.tk20.Entities;
 
-import java.sql.Date;
 import java.sql.Timestamp;
-import java.util.List;
 
-/**
- * @author manishsharma
- *
- */
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Comment {
 
+	private int id;
 
-	public String getId() {
+	private int task_id;
+
+	private String text;
+
+	private int created_by;
+
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+	private Timestamp createtime;
+
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+	private Timestamp updatetime;
+
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+	private Timestamp created_on;
+
+	public int getId() {
 		return id;
 	}
 
-	public void setId(String id) {
+	public void setId(int id) {
 		this.id = id;
 	}
 
-	public String getName() {
-		return name;
+	public int getTask_id() {
+		return task_id;
 	}
 
-	public void setName(String name) {
-		this.name = name;
+	public void setTask_id(int task_id) {
+		this.task_id = task_id;
 	}
 
-	public String getEmail() {
-		return email;
+	public String getText() {
+		return text;
 	}
 
-	public void setEmail(String email) {
-		this.email = email;
+	public void setText(String text) {
+		this.text = text;
 	}
 
-	private String id;
+	public int getCreated_by() {
+		return created_by;
+	}
 
-	private String name;
+	public void setCreated_by(int created_by) {
+		this.created_by = created_by;
+	}
 
-	private String email;
-	
-	
+	public Timestamp getCreatetime() {
+		return createtime;
+	}
 
-	
+	public void setCreatetime(Timestamp createtime) {
+		this.createtime = createtime;
+	}
+
+	public Timestamp getUpdatetime() {
+		return updatetime;
+	}
+
+	public void setUpdatetime(Timestamp updatetime) {
+		this.updatetime = updatetime;
+	}
+
+	public Timestamp getCreated_on() {
+		return created_on;
+	}
+
+	public void setCreated_on(Timestamp created_on) {
+		this.created_on = created_on;
+	}
 
 }
