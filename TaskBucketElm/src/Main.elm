@@ -426,7 +426,8 @@ update msg model =
         InputCommentText description ->
          let
            comment = model.currentComment
-           newComment = {comment | text = description}
+           newComment = {comment | text = description, createdBy = (getUserId model.userList model.loginUser.userEmail)
+                        }
          in
            ({model | currentComment = newComment}, Cmd.none)
 
@@ -696,7 +697,6 @@ renderTaskComments comments userList =
             comments
         )
 
---text "Added By: " ++ text (getUserName userList  comment.createdBy) ++ text "on" ++ text comment.createTime
 renderTaskDetails : Task -> Model -> Html Msg
 renderTaskDetails task model =
   let
@@ -725,6 +725,15 @@ renderTaskDetails task model =
            --   text "body here"
            -- ]
 
+getUserId : List User -> String -> Int
+getUserId  users email =
+  let
+    user = users
+      |> List.filter( \u -> u.email == email)
+      |> List.head
+      |> Maybe.withDefault emptyUser
+  in
+    user.id
 
 getUserName : List User -> Int -> String
 getUserName  users id =
