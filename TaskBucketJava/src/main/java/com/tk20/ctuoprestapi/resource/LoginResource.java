@@ -37,7 +37,7 @@ public class LoginResource {
 	@PostMapping(path = "", consumes = MediaType.APPLICATION_JSON_VALUE)
 	public User authenticateUsers(@RequestBody User user) {
 
-		String sql = "select * from users where email ='" + user.getEmail() + "';";
+		String sql = "select * from users where email ='" + user.getEmail() + "@watermarkinsights.com';";
 
 		ResultSet userCursor = null;
 		try (Connection conn = this.connect(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -49,6 +49,8 @@ public class LoginResource {
 				user.setName(userCursor.getString("name"));
 				user.setEmail(userCursor.getString("email"));
 				user.setCreatetime(userCursor.getTimestamp("createtime"));
+				user.setRole(userCursor.getString("role"));
+				user.setImageurl(userCursor.getString("imageURL"));
 			}
 
 		} catch (SQLException e) {

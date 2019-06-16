@@ -254,3 +254,9 @@ textarea{
  color: #575195;
  font-size: 13px;
 }
+.taskBucket{
+ display: inline-block;
+ font-weight: bold;
+ color: #575195;
+ font-size: 43px;
+}
