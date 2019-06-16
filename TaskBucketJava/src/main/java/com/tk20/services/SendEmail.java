@@ -15,7 +15,7 @@ public class SendEmail {
 			String sender, String subject) {
 
 		// Assuming you are sending email from localhost
-		String host = "localhost";
+		String host = "mail.tk20.com";
 
 		// Get system properties
 		Properties properties = System.getProperties();

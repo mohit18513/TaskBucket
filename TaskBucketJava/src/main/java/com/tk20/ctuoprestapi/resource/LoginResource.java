@@ -19,6 +19,7 @@ import com.google.common.base.Throwables;
 
 import main.java.com.ExceptionHandlers.ApplicationException;
 import main.java.com.ExceptionHandlers.BadPasswordError;
+import main.java.com.ExceptionHandlers.UserNotFound;
 import main.java.com.tk20.Entities.User;
 import main.java.com.tk20.services.Logger;
 
@@ -42,6 +43,8 @@ public class LoginResource {
 		ResultSet userCursor = null;
 		try (Connection conn = this.connect(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
 			userCursor = pstmt.executeQuery();
+			if (userCursor == null)
+				throw new UserNotFound();
 			while (userCursor.next()) {
 				if (!user.getPwd().equals(userCursor.getString("pwd")))
 					throw new BadPasswordError();
