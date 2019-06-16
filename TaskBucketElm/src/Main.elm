@@ -48,7 +48,7 @@ main =
 init : Maybe Model -> ( Model, Cmd Msg )
 init maybeModel =
   ( Maybe.withDefault emptyModel maybeModel
-  , Cmd.batch [ getTasksRequest, getUsersRequest ]
+  , Cmd.none --Cmd.batch [ getTasksRequest, getUsersRequest ]
   )
 --
 -- routeInitialCmd : Cmd Msg
@@ -609,7 +609,7 @@ update msg model =
         Login ->
           (model, logInUserRequest model.loginUser)
         UserLoggedIn  (Ok user) ->
-            ( {model | user = user}, Cmd.none )
+            ( {model | user = user}, Cmd.batch [ getTasksRequest, getUsersRequest ] )
 
         UserLoggedIn (Err err) ->
           let
@@ -687,7 +687,7 @@ renderTaskComments comments userList =
                         [ div [ class "list-header" ]
                             [ div []
                                 [ img [src (getUserImgUrl userList comment.createdBy), width 30, height 30] []
-                                , textarea [] [ text comment.text ]
+                                , textarea [disabled True] [ text comment.text ]
                                 , div []
                                     [
                                     -- text "Added by "
@@ -715,19 +715,19 @@ renderTaskDetails task model =
         [ div []
             [ label [] [text "  Description: "]
             , span [] [text (task.description)]
-            , label [][ text "Owner: "]
-            , label [] [text (getUserName model.userList task.ownerId)]
-            , label [][ text "  Due Date: "]
-            , label [] [text task.due_date]
-            , label [][ text "  Created By: "]
-            , label [] [text (getUserName model.userList task.created_by)]
-            , label [][ text "  Created On: "]
-            , label [] [text task.createdOn]
+            , div [][ label [][ text "Owner: "]
+            , label [] [text (getUserName model.userList task.ownerId)]]
+            , div [][ label [][ text "  Due Date: "]
+            , label [] [text task.due_date]]
+            , div [] [ label [][ text "  Created By: "]
+            , label [] [text (getUserName model.userList task.created_by)]]
+            , div [][ label [][ text "  Created On: "]
+            , label [] [text task.createdOn]]
             ]
            --, a [onClick (ShowTaskDetails task)] [text task.title]
            --, div[class "button-collection"][button [ onClick (DeleteTask task.taskId)] [text "Delete"]
            --, button [ class "button", onClick (AddComment (defaultComment model.user l))][text "Add Comment"]]
-           , if model.renderView == "CreateComment" then div [ ][ renderCreateCommentView model ] else div [class "button-collection"][button [ class "button", onClick (CreateComment task) ][text "Add Comment"]]
+           , if model.renderView == "CreateComment" then div [ ][ renderCreateCommentView model ] else div [][ img [title "Create Comment", src "http://pngimg.com/uploads/plus/plus_PNG122.png", width 30, height 30, onClick (CreateComment task)] []]
            , renderTaskComments model.commentList model.userList  --button [ class "button", onClick (FetchComments task)][text "Show Comments"]
            ]
            -- ,div[class "body"][
@@ -788,6 +788,7 @@ view model =
   if isUserNotLoggedIn then loginView model else div[][
     div[class "header"][
     h1 [class "headerStyle"] [ text "Task bucket" ]
+    , h2 [class "headerStyle"] [ text ("Welcome : " ++ (getUserName model.userList model.user.id)) ]
     , button [ onClick CreateTask, class "btn-secondary" ] [text "Create Task"]
     , button [ onClick ShowFilterPanel, class "btn-secondary" ] [text "Filter Tasks"]
     , button [ onClick LogOut ] [text "LogOut"]
@@ -950,7 +951,7 @@ renderFilterView model =
 createTaskRequest : Task -> Cmd Msg
 createTaskRequest task =
     Http.post
-        { url = "http://172.15.3.11:9999/task-bucket-api/tasks"
+        { url = "https://reportstesting1.tk20.com/taskbucketapi/task-bucket-api/tasks"
         , body = Http.jsonBody (newTaskEncoder task)
         , expect = Http.expectJson TaskCreated taskDecoder
         --, timeout = Nothing
@@ -963,7 +964,7 @@ updateTaskRequest task =
       _ = Debug.log "task in updateTaskRequest ===" task
     in
       Http.post
-        { url = "http://172.15.3.11:9999/task-bucket-api/tasks/"++ String.fromInt(task.taskId)
+        { url = "https://reportstesting1.tk20.com/taskbucketapi/task-bucket-api/tasks/"++ String.fromInt(task.taskId)
         , body = Http.jsonBody (newTaskEncoder task)
         , expect = Http.expectJson TaskUpdated taskDecoder
         --, timeout = Nothing
@@ -973,7 +974,7 @@ updateTaskRequest task =
 getTasksRequest : Cmd Msg
 getTasksRequest =
   Http.get
-      { url = "http://172.15.3.11:9999/task-bucket-api/tasks"
+      { url = "https://reportstesting1.tk20.com/taskbucketapi/task-bucket-api/tasks"
       , expect = Http.expectJson TasksFetched taskListDecoder
       --, timeout = Nothing
       --, withCredentials = False
@@ -1049,7 +1050,7 @@ defaultComment  user task =
 createCommentRequest : User -> Task -> Comment -> Cmd Msg
 createCommentRequest user task comment =
    Http.post
-       { url = "http://172.15.3.11:9999/task-bucket-api/tasks/"++ String.fromInt(task.taskId) ++"/comments"
+       { url = "https://reportstesting1.tk20.com/taskbucketapi/task-bucket-api/tasks/"++ String.fromInt(task.taskId) ++"/comments"
        , body = Http.jsonBody (createCommentEncoder user task comment)
        , expect = Http.expectJson CommentCreated commentDecoder
        }
@@ -1075,14 +1076,14 @@ getCommentsRequest : Int -> Cmd Msg
 getCommentsRequest taskId =
  Http.get
      {
-     url = "http://172.15.3.11:9999/task-bucket-api/tasks/" ++ String.fromInt(taskId) ++"/comments"
+     url = "https://reportstesting1.tk20.com/taskbucketapi/task-bucket-api/tasks/" ++ String.fromInt(taskId) ++"/comments"
      , expect = Http.expectJson CommentsFetched commentListDecoder
      }
 
 deleteTaskRequest : Task -> Cmd Msg
 deleteTaskRequest task =
     Http.post
-        { url = "http://172.15.3.11:9999/task-bucket-api/tasks/delete"
+        { url = "https://reportstesting1.tk20.com/taskbucketapi/task-bucket-api/tasks/delete"
         , body = Http.jsonBody (taskEncoder task)
         , expect = Http.expectJson TaskDeleted deleteMessageDecoder
         --, timeout = Nothing
@@ -1095,7 +1096,7 @@ commentListDecoder = Json.list commentDecoder
 renderCreateCommentView: Model -> Html Msg
 renderCreateCommentView model =
  div []
-     [ h1 [] [ text "Create Comments" ]
+     [ label [] [ text "Create Comment: " ]
      , textarea [ onInput InputCommentText
              ]
              []
@@ -1124,7 +1125,7 @@ logInUserEncoder loginUser =
 logInUserRequest : LoginUser -> Cmd Msg
 logInUserRequest loginUser =
     Http.post
-        { url = "http://172.15.3.11:9999/task-bucket-api/login"
+        { url = "https://reportstesting1.tk20.com/taskbucketapi/task-bucket-api/login"
         , body = Http.jsonBody (logInUserEncoder loginUser)
         , expect = Http.expectJson UserLoggedIn userDecoder
         --, timeout = Nothing
@@ -1134,7 +1135,7 @@ logInUserRequest loginUser =
 getUsersRequest : Cmd Msg
 getUsersRequest =
  Http.get
-     { url = "http://172.15.3.11:9999/task-bucket-api/users"
+     { url = "https://reportstesting1.tk20.com/taskbucketapi/task-bucket-api/users"
      , expect = Http.expectJson UsersFetched userListDecoder
      }
 
