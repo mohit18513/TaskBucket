@@ -4592,13 +4592,23 @@ var author$project$Main$emptyModel = {
 	userList: _List_Nil,
 	visibility: 'All'
 };
-var author$project$Main$TasksFetched = function (a) {
-	return {$: 'TasksFetched', a: a};
-};
-var elm$core$Basics$apR = F2(
-	function (x, f) {
-		return f(x);
+var elm$core$Maybe$withDefault = F2(
+	function (_default, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return value;
+		} else {
+			return _default;
+		}
 	});
+var elm$core$Basics$True = {$: 'True'};
+var elm$core$Result$isOk = function (result) {
+	if (result.$ === 'Ok') {
+		return true;
+	} else {
+		return false;
+	}
+};
 var elm$core$Array$branchFactor = 32;
 var elm$core$Array$Array_elm_builtin = F4(
 	function (a, b, c, d) {
@@ -4665,6 +4675,10 @@ var elm$core$Array$compressNodes = F2(
 				continue compressNodes;
 			}
 		}
+	});
+var elm$core$Basics$apR = F2(
+	function (x, f) {
+		return f(x);
 	});
 var elm$core$Basics$eq = _Utils_equal;
 var elm$core$Tuple$first = function (_n0) {
@@ -4775,14 +4789,6 @@ var elm$core$Result$Err = function (a) {
 };
 var elm$core$Result$Ok = function (a) {
 	return {$: 'Ok', a: a};
-};
-var elm$core$Basics$True = {$: 'True'};
-var elm$core$Result$isOk = function (result) {
-	if (result.$ === 'Ok') {
-		return true;
-	} else {
-		return false;
-	}
 };
 var elm$json$Json$Decode$Failure = F2(
 	function (a, b) {
@@ -4989,6 +4995,17 @@ var elm$json$Json$Decode$errorToStringHelp = F2(
 			}
 		}
 	});
+var elm$core$Platform$Cmd$batch = _Platform_batch;
+var elm$core$Platform$Cmd$none = elm$core$Platform$Cmd$batch(_List_Nil);
+var author$project$Main$init = function (maybeModel) {
+	return _Utils_Tuple2(
+		A2(elm$core$Maybe$withDefault, author$project$Main$emptyModel, maybeModel),
+		elm$core$Platform$Cmd$none);
+};
+var author$project$Main$CancelFilter = {$: 'CancelFilter'};
+var author$project$Main$CommentCreated = function (a) {
+	return {$: 'CommentCreated', a: a};
+};
 var elm$json$Json$Decode$map2 = _Json_map2;
 var NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$custom = elm$json$Json$Decode$map2(elm$core$Basics$apR);
 var elm$json$Json$Decode$andThen = _Json_andThen;
@@ -5049,95 +5066,63 @@ var NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required = F3(
 			A2(elm$json$Json$Decode$field, key, valDecoder),
 			decoder);
 	});
-var author$project$Main$Task = function (taskId) {
-	return function (title) {
-		return function (description) {
-			return function (created_by) {
-				return function (ownerId) {
-					return function (status) {
-						return function (due_date) {
-							return function (createdOn) {
-								return function (commentedOn) {
-									return function (isTaskDeleted) {
-										return function (isTaskCompleted) {
-											return function (showDetails) {
-												return {commentedOn: commentedOn, createdOn: createdOn, created_by: created_by, description: description, due_date: due_date, isTaskCompleted: isTaskCompleted, isTaskDeleted: isTaskDeleted, ownerId: ownerId, showDetails: showDetails, status: status, taskId: taskId, title: title};
-											};
-										};
-									};
-								};
-							};
-						};
-					};
-				};
-			};
-		};
-	};
-};
-var elm$json$Json$Decode$bool = _Json_decodeBool;
 var elm$json$Json$Decode$int = _Json_decodeInt;
 var elm$json$Json$Decode$string = _Json_decodeString;
-var author$project$Main$taskDecoder = A4(
+var author$project$Main$commentDecoder = A4(
 	NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
-	'showDetails',
-	elm$json$Json$Decode$bool,
-	false,
+	'createtime',
+	elm$json$Json$Decode$string,
+	'',
 	A4(
 		NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
-		'isTaskCompleted',
-		elm$json$Json$Decode$bool,
-		false,
+		'created_by',
+		elm$json$Json$Decode$int,
+		1,
 		A4(
 			NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
-			'isTaskDeleted',
-			elm$json$Json$Decode$bool,
-			false,
-			A4(
-				NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
-				'last_commented_on',
-				elm$json$Json$Decode$string,
-				'',
-				A4(
-					NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
-					'createtime',
-					elm$json$Json$Decode$string,
-					'',
-					A4(
-						NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
-						'due_date',
-						elm$json$Json$Decode$string,
-						'',
-						A4(
-							NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
-							'status',
-							elm$json$Json$Decode$int,
-							0,
-							A4(
-								NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
-								'owner',
-								elm$json$Json$Decode$int,
-								0,
-								A4(
-									NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
-									'created_by',
-									elm$json$Json$Decode$int,
-									0,
-									A4(
-										NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
-										'description',
-										elm$json$Json$Decode$string,
-										'',
-										A3(
-											NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-											'title',
-											elm$json$Json$Decode$string,
-											A3(
-												NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-												'id',
-												elm$json$Json$Decode$int,
-												elm$json$Json$Decode$succeed(author$project$Main$Task)))))))))))));
-var elm$json$Json$Decode$list = _Json_decodeList;
-var author$project$Main$taskListDecoder = elm$json$Json$Decode$list(author$project$Main$taskDecoder);
+			'text',
+			elm$json$Json$Decode$string,
+			'',
+			A3(
+				NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+				'task_id',
+				elm$json$Json$Decode$int,
+				A3(
+					NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+					'id',
+					elm$json$Json$Decode$int,
+					elm$json$Json$Decode$succeed(author$project$Main$Comment))))));
+var elm$json$Json$Encode$int = _Json_wrap;
+var elm$json$Json$Encode$object = function (pairs) {
+	return _Json_wrap(
+		A3(
+			elm$core$List$foldl,
+			F2(
+				function (_n0, obj) {
+					var k = _n0.a;
+					var v = _n0.b;
+					return A3(_Json_addField, k, v, obj);
+				}),
+			_Json_emptyObject(_Utils_Tuple0),
+			pairs));
+};
+var elm$json$Json$Encode$string = _Json_wrap;
+var author$project$Main$createCommentEncoder = F3(
+	function (user, task, comment) {
+		return elm$json$Json$Encode$object(
+			_List_fromArray(
+				[
+					_Utils_Tuple2(
+					'task_id',
+					elm$json$Json$Encode$int(task.taskId)),
+					_Utils_Tuple2(
+					'text',
+					elm$json$Json$Encode$string(comment.text)),
+					_Utils_Tuple2(
+					'created_by',
+					elm$json$Json$Encode$int(user.id))
+				]));
+	});
 var elm$core$Result$mapError = F2(
 	function (f, result) {
 		if (result.$ === 'Ok') {
@@ -5767,7 +5752,12 @@ var elm$http$Http$expectJson = F2(
 						A2(elm$json$Json$Decode$decodeString, decoder, string));
 				}));
 	});
-var elm$http$Http$emptyBody = _Http_emptyBody;
+var elm$http$Http$jsonBody = function (value) {
+	return A2(
+		_Http_pair,
+		'application/json',
+		A2(elm$json$Json$Encode$encode, 0, value));
+};
 var elm$http$Http$Request = function (a) {
 	return {$: 'Request', a: a};
 };
@@ -6015,129 +6005,6 @@ var elm$http$Http$request = function (r) {
 		elm$http$Http$Request(
 			{allowCookiesFromOtherDomains: false, body: r.body, expect: r.expect, headers: r.headers, method: r.method, timeout: r.timeout, tracker: r.tracker, url: r.url}));
 };
-var elm$http$Http$get = function (r) {
-	return elm$http$Http$request(
-		{body: elm$http$Http$emptyBody, expect: r.expect, headers: _List_Nil, method: 'GET', timeout: elm$core$Maybe$Nothing, tracker: elm$core$Maybe$Nothing, url: r.url});
-};
-var author$project$Main$getTasksRequest = elm$http$Http$get(
-	{
-		expect: A2(elm$http$Http$expectJson, author$project$Main$TasksFetched, author$project$Main$taskListDecoder),
-		url: 'https://reportstesting1.tk20.com/taskbucketapi/task-bucket-api/tasks'
-	});
-var author$project$Main$UsersFetched = function (a) {
-	return {$: 'UsersFetched', a: a};
-};
-var author$project$Main$User = F4(
-	function (id, name, email, imageurl) {
-		return {email: email, id: id, imageurl: imageurl, name: name};
-	});
-var author$project$Main$userDecoder = A4(
-	NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
-	'imageurl',
-	elm$json$Json$Decode$string,
-	'',
-	A4(
-		NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
-		'email',
-		elm$json$Json$Decode$string,
-		'',
-		A3(
-			NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-			'name',
-			elm$json$Json$Decode$string,
-			A3(
-				NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-				'id',
-				elm$json$Json$Decode$int,
-				elm$json$Json$Decode$succeed(author$project$Main$User)))));
-var author$project$Main$userListDecoder = elm$json$Json$Decode$list(author$project$Main$userDecoder);
-var author$project$Main$getUsersRequest = elm$http$Http$get(
-	{
-		expect: A2(elm$http$Http$expectJson, author$project$Main$UsersFetched, author$project$Main$userListDecoder),
-		url: 'https://reportstesting1.tk20.com/taskbucketapi/task-bucket-api/users'
-	});
-var elm$core$Maybe$withDefault = F2(
-	function (_default, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return value;
-		} else {
-			return _default;
-		}
-	});
-var elm$core$Platform$Cmd$batch = _Platform_batch;
-var author$project$Main$init = function (maybeModel) {
-	return _Utils_Tuple2(
-		A2(elm$core$Maybe$withDefault, author$project$Main$emptyModel, maybeModel),
-		elm$core$Platform$Cmd$batch(
-			_List_fromArray(
-				[author$project$Main$getTasksRequest, author$project$Main$getUsersRequest])));
-};
-var author$project$Main$CancelFilter = {$: 'CancelFilter'};
-var author$project$Main$CommentCreated = function (a) {
-	return {$: 'CommentCreated', a: a};
-};
-var author$project$Main$commentDecoder = A4(
-	NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
-	'createtime',
-	elm$json$Json$Decode$string,
-	'',
-	A4(
-		NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
-		'created_by',
-		elm$json$Json$Decode$int,
-		1,
-		A4(
-			NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
-			'text',
-			elm$json$Json$Decode$string,
-			'',
-			A3(
-				NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-				'task_id',
-				elm$json$Json$Decode$int,
-				A3(
-					NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
-					'id',
-					elm$json$Json$Decode$int,
-					elm$json$Json$Decode$succeed(author$project$Main$Comment))))));
-var elm$json$Json$Encode$int = _Json_wrap;
-var elm$json$Json$Encode$object = function (pairs) {
-	return _Json_wrap(
-		A3(
-			elm$core$List$foldl,
-			F2(
-				function (_n0, obj) {
-					var k = _n0.a;
-					var v = _n0.b;
-					return A3(_Json_addField, k, v, obj);
-				}),
-			_Json_emptyObject(_Utils_Tuple0),
-			pairs));
-};
-var elm$json$Json$Encode$string = _Json_wrap;
-var author$project$Main$createCommentEncoder = F3(
-	function (user, task, comment) {
-		return elm$json$Json$Encode$object(
-			_List_fromArray(
-				[
-					_Utils_Tuple2(
-					'task_id',
-					elm$json$Json$Encode$int(task.taskId)),
-					_Utils_Tuple2(
-					'text',
-					elm$json$Json$Encode$string(comment.text)),
-					_Utils_Tuple2(
-					'created_by',
-					elm$json$Json$Encode$int(user.id))
-				]));
-	});
-var elm$http$Http$jsonBody = function (value) {
-	return A2(
-		_Http_pair,
-		'application/json',
-		A2(elm$json$Json$Encode$encode, 0, value));
-};
 var elm$http$Http$post = function (r) {
 	return elm$http$Http$request(
 		{body: r.body, expect: r.expect, headers: _List_Nil, method: 'POST', timeout: elm$core$Maybe$Nothing, tracker: elm$core$Maybe$Nothing, url: r.url});
@@ -6184,6 +6051,91 @@ var author$project$Main$newTaskEncoder = function (task) {
 				elm$json$Json$Encode$string(task.due_date))
 			]));
 };
+var author$project$Main$Task = function (taskId) {
+	return function (title) {
+		return function (description) {
+			return function (created_by) {
+				return function (ownerId) {
+					return function (status) {
+						return function (due_date) {
+							return function (createdOn) {
+								return function (commentedOn) {
+									return function (isTaskDeleted) {
+										return function (isTaskCompleted) {
+											return function (showDetails) {
+												return {commentedOn: commentedOn, createdOn: createdOn, created_by: created_by, description: description, due_date: due_date, isTaskCompleted: isTaskCompleted, isTaskDeleted: isTaskDeleted, ownerId: ownerId, showDetails: showDetails, status: status, taskId: taskId, title: title};
+											};
+										};
+									};
+								};
+							};
+						};
+					};
+				};
+			};
+		};
+	};
+};
+var elm$json$Json$Decode$bool = _Json_decodeBool;
+var author$project$Main$taskDecoder = A4(
+	NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
+	'showDetails',
+	elm$json$Json$Decode$bool,
+	false,
+	A4(
+		NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
+		'isTaskCompleted',
+		elm$json$Json$Decode$bool,
+		false,
+		A4(
+			NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
+			'isTaskDeleted',
+			elm$json$Json$Decode$bool,
+			false,
+			A4(
+				NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
+				'last_commented_on',
+				elm$json$Json$Decode$string,
+				'',
+				A4(
+					NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
+					'createtime',
+					elm$json$Json$Decode$string,
+					'',
+					A4(
+						NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
+						'due_date',
+						elm$json$Json$Decode$string,
+						'',
+						A4(
+							NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
+							'status',
+							elm$json$Json$Decode$int,
+							0,
+							A4(
+								NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
+								'owner',
+								elm$json$Json$Decode$int,
+								0,
+								A4(
+									NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
+									'created_by',
+									elm$json$Json$Decode$int,
+									0,
+									A4(
+										NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
+										'description',
+										elm$json$Json$Decode$string,
+										'',
+										A3(
+											NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+											'title',
+											elm$json$Json$Decode$string,
+											A3(
+												NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+												'id',
+												elm$json$Json$Decode$int,
+												elm$json$Json$Decode$succeed(author$project$Main$Task)))))))))))));
 var author$project$Main$createTaskRequest = function (task) {
 	return elm$http$Http$post(
 		{
@@ -6244,7 +6196,13 @@ var author$project$Main$deleteTaskRequest = function (task) {
 var author$project$Main$CommentsFetched = function (a) {
 	return {$: 'CommentsFetched', a: a};
 };
+var elm$json$Json$Decode$list = _Json_decodeList;
 var author$project$Main$commentListDecoder = elm$json$Json$Decode$list(author$project$Main$commentDecoder);
+var elm$http$Http$emptyBody = _Http_emptyBody;
+var elm$http$Http$get = function (r) {
+	return elm$http$Http$request(
+		{body: elm$http$Http$emptyBody, expect: r.expect, headers: _List_Nil, method: 'GET', timeout: elm$core$Maybe$Nothing, tracker: elm$core$Maybe$Nothing, url: r.url});
+};
 var author$project$Main$getCommentsRequest = function (taskId) {
 	return elm$http$Http$get(
 		{
@@ -6252,6 +6210,15 @@ var author$project$Main$getCommentsRequest = function (taskId) {
 			url: 'https://reportstesting1.tk20.com/taskbucketapi/task-bucket-api/tasks/' + (elm$core$String$fromInt(taskId) + '/comments')
 		});
 };
+var author$project$Main$TasksFetched = function (a) {
+	return {$: 'TasksFetched', a: a};
+};
+var author$project$Main$taskListDecoder = elm$json$Json$Decode$list(author$project$Main$taskDecoder);
+var author$project$Main$getTasksRequest = elm$http$Http$get(
+	{
+		expect: A2(elm$http$Http$expectJson, author$project$Main$TasksFetched, author$project$Main$taskListDecoder),
+		url: 'https://reportstesting1.tk20.com/taskbucketapi/task-bucket-api/tasks'
+	});
 var elm$core$List$filter = F2(
 	function (isGood, list) {
 		return A3(
@@ -6299,6 +6266,38 @@ var author$project$Main$getUserName = F2(
 					},
 					users)));
 		return user.name;
+	});
+var author$project$Main$UsersFetched = function (a) {
+	return {$: 'UsersFetched', a: a};
+};
+var author$project$Main$User = F4(
+	function (id, name, email, imageurl) {
+		return {email: email, id: id, imageurl: imageurl, name: name};
+	});
+var author$project$Main$userDecoder = A4(
+	NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
+	'imageurl',
+	elm$json$Json$Decode$string,
+	'',
+	A4(
+		NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
+		'email',
+		elm$json$Json$Decode$string,
+		'',
+		A3(
+			NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+			'name',
+			elm$json$Json$Decode$string,
+			A3(
+				NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+				'id',
+				elm$json$Json$Decode$int,
+				elm$json$Json$Decode$succeed(author$project$Main$User)))));
+var author$project$Main$userListDecoder = elm$json$Json$Decode$list(author$project$Main$userDecoder);
+var author$project$Main$getUsersRequest = elm$http$Http$get(
+	{
+		expect: A2(elm$http$Http$expectJson, author$project$Main$UsersFetched, author$project$Main$userListDecoder),
+		url: 'https://reportstesting1.tk20.com/taskbucketapi/task-bucket-api/users'
 	});
 var author$project$Main$UserLoggedIn = function (a) {
 	return {$: 'UserLoggedIn', a: a};
@@ -6391,7 +6390,6 @@ var elm$core$List$member = F2(
 			},
 			xs);
 	});
-var elm$core$Platform$Cmd$none = elm$core$Platform$Cmd$batch(_List_Nil);
 var elm$core$String$contains = _String_contains;
 var elm$core$String$toLower = _String_toLower;
 var elm$core$Task$Perform = function (a) {
@@ -6479,7 +6477,7 @@ var author$project$Main$update = F2(
 				var task = model.newTask;
 				var newTask = _Utils_update(
 					task,
-					{title: title});
+					{created_by: model.user.id, title: title});
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
@@ -6981,7 +6979,9 @@ var author$project$Main$update = F2(
 						_Utils_update(
 							model,
 							{user: user}),
-						elm$core$Platform$Cmd$none);
+						elm$core$Platform$Cmd$batch(
+							_List_fromArray(
+								[author$project$Main$getTasksRequest, author$project$Main$getUsersRequest])));
 				} else {
 					var err = msg.a.a;
 					var _n27 = A2(elm$core$Debug$log, 'Error UserLoggedIn===', err);
@@ -7548,11 +7548,11 @@ var author$project$Main$renderCreateCommentView = function (model) {
 		_List_fromArray(
 			[
 				A2(
-				elm$html$Html$h1,
+				elm$html$Html$label,
 				_List_Nil,
 				_List_fromArray(
 					[
-						elm$html$Html$text('Create Comments')
+						elm$html$Html$text('Create Comment: ')
 					])),
 				A2(
 				elm$html$Html$textarea,
@@ -7600,6 +7600,7 @@ var author$project$Main$getUserImgUrl = F2(
 		return user.imageurl;
 	});
 var elm$html$Html$ol = _VirtualDom_node('ol');
+var elm$html$Html$Attributes$disabled = elm$html$Html$Attributes$boolProperty('disabled');
 var author$project$Main$renderTaskComments = F2(
 	function (comments, userList) {
 		return A2(
@@ -7646,7 +7647,10 @@ var author$project$Main$renderTaskComments = F2(
 														_List_Nil),
 														A2(
 														elm$html$Html$textarea,
-														_List_Nil,
+														_List_fromArray(
+															[
+																elm$html$Html$Attributes$disabled(true)
+															]),
 														_List_fromArray(
 															[
 																elm$html$Html$text(comment.text)
@@ -7665,6 +7669,7 @@ var author$project$Main$renderTaskComments = F2(
 				},
 				comments));
 	});
+var elm$html$Html$Attributes$title = elm$html$Html$Attributes$stringProperty('title');
 var author$project$Main$renderTaskDetails = F2(
 	function (task, model) {
 		var _n0 = A2(elm$core$Debug$log, 'task details===', task);
@@ -7693,62 +7698,86 @@ var author$project$Main$renderTaskDetails = F2(
 									elm$html$Html$text(task.description)
 								])),
 							A2(
-							elm$html$Html$label,
+							elm$html$Html$div,
 							_List_Nil,
 							_List_fromArray(
 								[
-									elm$html$Html$text('Owner: ')
+									A2(
+									elm$html$Html$label,
+									_List_Nil,
+									_List_fromArray(
+										[
+											elm$html$Html$text('Owner: ')
+										])),
+									A2(
+									elm$html$Html$label,
+									_List_Nil,
+									_List_fromArray(
+										[
+											elm$html$Html$text(
+											A2(author$project$Main$getUserName, model.userList, task.ownerId))
+										]))
 								])),
 							A2(
-							elm$html$Html$label,
+							elm$html$Html$div,
 							_List_Nil,
 							_List_fromArray(
 								[
-									elm$html$Html$text(
-									A2(author$project$Main$getUserName, model.userList, task.ownerId))
+									A2(
+									elm$html$Html$label,
+									_List_Nil,
+									_List_fromArray(
+										[
+											elm$html$Html$text('  Due Date: ')
+										])),
+									A2(
+									elm$html$Html$label,
+									_List_Nil,
+									_List_fromArray(
+										[
+											elm$html$Html$text(task.due_date)
+										]))
 								])),
 							A2(
-							elm$html$Html$label,
+							elm$html$Html$div,
 							_List_Nil,
 							_List_fromArray(
 								[
-									elm$html$Html$text('  Due Date: ')
+									A2(
+									elm$html$Html$label,
+									_List_Nil,
+									_List_fromArray(
+										[
+											elm$html$Html$text('  Created By: ')
+										])),
+									A2(
+									elm$html$Html$label,
+									_List_Nil,
+									_List_fromArray(
+										[
+											elm$html$Html$text(
+											A2(author$project$Main$getUserName, model.userList, task.created_by))
+										]))
 								])),
 							A2(
-							elm$html$Html$label,
+							elm$html$Html$div,
 							_List_Nil,
 							_List_fromArray(
 								[
-									elm$html$Html$text(task.due_date)
-								])),
-							A2(
-							elm$html$Html$label,
-							_List_Nil,
-							_List_fromArray(
-								[
-									elm$html$Html$text('  Created By: ')
-								])),
-							A2(
-							elm$html$Html$label,
-							_List_Nil,
-							_List_fromArray(
-								[
-									elm$html$Html$text(
-									A2(author$project$Main$getUserName, model.userList, task.created_by))
-								])),
-							A2(
-							elm$html$Html$label,
-							_List_Nil,
-							_List_fromArray(
-								[
-									elm$html$Html$text('  Created On: ')
-								])),
-							A2(
-							elm$html$Html$label,
-							_List_Nil,
-							_List_fromArray(
-								[
-									elm$html$Html$text(task.createdOn)
+									A2(
+									elm$html$Html$label,
+									_List_Nil,
+									_List_fromArray(
+										[
+											elm$html$Html$text('  Created On: ')
+										])),
+									A2(
+									elm$html$Html$label,
+									_List_Nil,
+									_List_fromArray(
+										[
+											elm$html$Html$text(task.createdOn)
+										]))
 								]))
 						])),
 					(model.renderView === 'CreateComment') ? A2(
@@ -7759,24 +7788,21 @@ var author$project$Main$renderTaskDetails = F2(
 							author$project$Main$renderCreateCommentView(model)
 						])) : A2(
 					elm$html$Html$div,
-					_List_fromArray(
-						[
-							elm$html$Html$Attributes$class('button-collection')
-						]),
+					_List_Nil,
 					_List_fromArray(
 						[
 							A2(
-							elm$html$Html$button,
+							elm$html$Html$img,
 							_List_fromArray(
 								[
-									elm$html$Html$Attributes$class('button'),
+									elm$html$Html$Attributes$title('Create Comment'),
+									elm$html$Html$Attributes$src('http://pngimg.com/uploads/plus/plus_PNG122.png'),
+									elm$html$Html$Attributes$width(30),
+									elm$html$Html$Attributes$height(30),
 									elm$html$Html$Events$onClick(
 									author$project$Main$CreateComment(task))
 								]),
-							_List_fromArray(
-								[
-									elm$html$Html$text('Add Comment')
-								]))
+							_List_Nil)
 						])),
 					A2(author$project$Main$renderTaskComments, model.commentList, model.userList)
 				]));
@@ -8503,6 +8529,17 @@ var author$project$Main$view = function (model) {
 						_List_fromArray(
 							[
 								elm$html$Html$text('Task bucket')
+							])),
+						A2(
+						elm$html$Html$h2,
+						_List_fromArray(
+							[
+								elm$html$Html$Attributes$class('headerStyle')
+							]),
+						_List_fromArray(
+							[
+								elm$html$Html$text(
+								'Welcome : ' + A2(author$project$Main$getUserName, model.userList, model.user.id))
 							])),
 						A2(
 						elm$html$Html$button,

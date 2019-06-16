@@ -2,9 +2,6 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="E:/TaskBucket/TaskBucketJava/lib/classmate-1.3.3.jar"/>
-	<classpathentry kind="lib" path="E:/TaskBucket/TaskBucketJava/lib/google-collections-1.0.jar"/>
-	<classpathentry kind="lib" path="E:/TaskBucket/TaskBucketJava/lib/guava-12.0.jar"/>
 	<classpathentry kind="lib" path="E:/TaskBucket/TaskBucketJava/lib/hibernate-validator-5.3.5.Final.jar"/>
 	<classpathentry kind="lib" path="E:/TaskBucket/TaskBucketJava/lib/jackson-annotations-2.8.0.jar"/>
 	<classpathentry kind="lib" path="E:/TaskBucket/TaskBucketJava/lib/jackson-core-2.8.9.jar"/>
@@ -45,5 +42,8 @@
 	<classpathentry kind="lib" path="E:/TaskBucket/TaskBucketJava/lib/tomcat-jdbc-8.5.16.jar"/>
 	<classpathentry kind="lib" path="E:/TaskBucket/TaskBucketJava/lib/tomcat-juli-8.5.16.jar"/>
 	<classpathentry kind="lib" path="E:/TaskBucket/TaskBucketJava/lib/validation-api-1.1.0.Final.jar"/>
+	<classpathentry kind="lib" path="E:/TaskBucket/TaskBucketJava/lib/classmate-1.3.3.jar"/>
+	<classpathentry kind="lib" path="E:/TaskBucket/TaskBucketJava/lib/google-collections-1.0.jar"/>
+	<classpathentry kind="lib" path="E:/TaskBucket/TaskBucketJava/lib/guava-12.0.jar"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>
