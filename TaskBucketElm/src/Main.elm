@@ -278,7 +278,7 @@ update msg model =
         InputTaskTitle title ->
           let
             task = model.newTask
-            newTask = {task | title = title}
+            newTask = {task | title = title, created_by = model.user.id}
           in
             ({model | newTask = newTask}, Cmd.none)
         InputDescription description ->
