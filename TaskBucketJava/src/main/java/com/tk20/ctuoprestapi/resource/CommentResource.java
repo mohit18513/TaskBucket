@@ -78,22 +78,16 @@ public class CommentResource {
 
 	@CrossOrigin(origins = "*")
 	@PostMapping(path = "", consumes = MediaType.APPLICATION_JSON_VALUE)
-	public Comment createComments(@RequestBody Comment comment,
-			@PathVariable int task_id) {
-		String sql = "INSERT INTO comments (task_id, text, created_by, created_on, createtime ) VALUES ("
-				+ task_id
-				+ ",'"
-				+ comment.getText().replace("'", "\'")
-				+ "',"
-				+ comment.getCreated_by() + ",now(), now());";
+	public Comment createComments(@RequestBody Comment comment, @PathVariable int task_id) {
+		String sql = "INSERT INTO comments (task_id, text, created_by, created_on, createtime ) VALUES (" + task_id
+				+ ",'" + comment.getText().replace("'", "\'") + "'," + comment.getCreated_by() + ",now(), now());";
 		System.out.println(sql);
 		ResultSet commentCursor = null;
 		PreparedStatement pstmt2 = null;
 		PreparedStatement pstmt3 = null;
 		ResultSet ownerAndContrinutorCursor = null;
 		ResultSet activeUserCursor = null;
-		try (Connection conn = this.connect();
-				Statement pstmt = conn.createStatement()) {
+		try (Connection conn = this.connect(); Statement pstmt = conn.createStatement()) {
 			pstmt.execute(sql, Statement.RETURN_GENERATED_KEYS);
 			int id = 0;
 			try (ResultSet rs = pstmt.getGeneratedKeys()) {
@@ -105,8 +99,7 @@ public class CommentResource {
 				pstmt2.setInt(1, task_id);
 				pstmt2.executeUpdate();
 
-				String commentQuery = "select * from comments where id=" + id
-						+ ";";
+				String commentQuery = "select * from comments where id=" + id + ";";
 				pstmt2 = conn.prepareStatement(commentQuery);
 				// pstmt.setInt(1, user_id);
 				commentCursor = pstmt2.executeQuery();
@@ -116,10 +109,8 @@ public class CommentResource {
 					comment.setTask_id(commentCursor.getInt("task_id"));
 					comment.setText(commentCursor.getString("text"));
 					comment.setCreated_by(commentCursor.getInt("created_by"));
-					comment.setCreated_on(commentCursor
-							.getTimestamp("created_on"));
-					comment.setCreatetime(commentCursor
-							.getTimestamp("createtime"));
+					comment.setCreated_on(commentCursor.getTimestamp("created_on"));
+					comment.setCreatetime(commentCursor.getTimestamp("createtime"));
 				}
 
 				if (pstmt2 != null)
@@ -128,7 +119,7 @@ public class CommentResource {
 						+ task_id
 						+ " union select distinct u2.email as email, t.title as title  from tasks t, users u2, task_user tu where u2.id = tu.owner and tu.tasks = t.id  and t.id="
 						+ task_id
-						+ "union select distinct u3.email as email, t.title as title from tasks t, users u3 where u3.id = t.created_by and t.id="
+						+ " union select distinct u3.email as email, t.title as title from tasks t, users u3 where u3.id = t.created_by and t.id="
 						+ task_id + ";";
 
 				String userName = "";
@@ -144,13 +135,8 @@ public class CommentResource {
 				userEmail = activeUserCursor.getString("email");
 
 				HashSet<String> emailSet = new HashSet<String>();
-				String emailBody = " Below comment has been logged by "
-						+ userName
-						+ "("
-						+ userEmail
-						+ ") "
-						+ "\n \n at "
-						+ new Date()
+				String emailBody = " Below comment has been logged by " + userName + "(" + userEmail + ") "
+						+ "\n \n at " + new Date()
 						+ " Comment :-\n \n <div style='background-color: lightblue; min-width: 800px; min-height:200px;'>"
 						+ comment.getText() + "</div>";
 				pstmt3 = conn.prepareStatement(ownerAndContrinutorQuery);
@@ -166,14 +152,11 @@ public class CommentResource {
 				if (!emailSet.isEmpty())
 					emailSet.remove(userEmail);
 				if (!emailSet.isEmpty())
-					SendEmail.send(emailBody, emailSet,
-							"support@taskbucket.in",
-							"A new comment has been logged on your task - "
-									+ taskTitle);
+					SendEmail.send(emailBody, emailSet, "support@taskbucket.in",
+							"A new comment has been logged on your task - " + taskTitle);
 			} catch (SQLException e) {
 				System.out.println(e.getMessage());
-				throw new ApplicationException(
-						Throwables.getStackTraceAsString(e), e.getMessage());
+				throw new ApplicationException(Throwables.getStackTraceAsString(e), e.getMessage());
 			} finally {
 				if (commentCursor != null)
 					try {
@@ -196,8 +179,7 @@ public class CommentResource {
 			conn = dataSource.getConnection();
 		} catch (SQLException e) {
 			System.out.println(e.getMessage());
-			throw new ApplicationException(Throwables.getStackTraceAsString(e),
-					e.getMessage());
+			throw new ApplicationException(Throwables.getStackTraceAsString(e), e.getMessage());
 		}
 		return conn;
 	}
