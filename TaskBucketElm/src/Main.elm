@@ -951,7 +951,7 @@ renderFilterView model =
 createTaskRequest : Task -> Cmd Msg
 createTaskRequest task =
     Http.post
-        { url = "https://reportstesting1.tk20.com/taskbucketapi/task-bucket-api/tasks/"++ String.fromInt(model.user.id)
+        { url = "https://reportstesting1.tk20.com/taskbucketapi/task-bucket-api/tasks"
         , body = Http.jsonBody (newTaskEncoder task)
         , expect = Http.expectJson TaskCreated taskDecoder
         --, timeout = Nothing
