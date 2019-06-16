@@ -43,9 +43,8 @@ public class LoginResource {
 		ResultSet userCursor = null;
 		try (Connection conn = this.connect(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
 			userCursor = pstmt.executeQuery();
-			if (userCursor == null)
-				throw new UserNotFound();
-			while (userCursor.next()) {
+			if (userCursor.next())
+			{
 				if (!user.getPwd().equals(userCursor.getString("pwd")))
 					throw new BadPasswordError();
 				user.setId(userCursor.getInt("id"));
@@ -55,7 +54,8 @@ public class LoginResource {
 				user.setRole(userCursor.getString("role"));
 				user.setImageurl(userCursor.getString("imageURL"));
 			}
-
+			else
+				throw new UserNotFound();
 		} catch (SQLException e) {
 			System.out.println(e.getMessage());
 			throw new ApplicationException(Throwables.getStackTraceAsString(e), e.getMessage());

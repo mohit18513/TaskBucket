@@ -4493,7 +4493,7 @@ var author$project$Main$defaultComment = F2(
 	function (user, task) {
 		return A5(author$project$Main$Comment, 0, task.taskId, task.title, user.id, '');
 	});
-var author$project$Main$emptyLoginUser = {id: 0, name: '', userEmail: '', userPassword: ''};
+var author$project$Main$emptyLoginUser = {userEmail: '', userPassword: ''};
 var elm$core$Basics$False = {$: 'False'};
 var author$project$Main$emptyTask = {commentedOn: '', createdOn: '', created_by: 1, description: '', due_date: '', isTaskCompleted: false, isTaskDeleted: false, ownerId: 1, showDetails: false, status: 0, taskId: 1, title: ''};
 var author$project$Main$emptyUser = {email: '', id: 0, imageurl: '', name: ''};
@@ -6313,13 +6313,7 @@ var author$project$Main$logInUserEncoder = function (loginUser) {
 				elm$json$Json$Encode$string(loginUser.userEmail)),
 				_Utils_Tuple2(
 				'pwd',
-				elm$json$Json$Encode$string(loginUser.userPassword)),
-				_Utils_Tuple2(
-				'id',
-				elm$json$Json$Encode$int(loginUser.id)),
-				_Utils_Tuple2(
-				'name',
-				elm$json$Json$Encode$string(loginUser.name))
+				elm$json$Json$Encode$string(loginUser.userPassword))
 			]));
 };
 var author$project$Main$logInUserRequest = function (loginUser) {
@@ -8533,14 +8527,6 @@ var author$project$Main$view = function (model) {
 								elm$html$Html$text('Filter Tasks')
 							])),
 						A2(
-						elm$html$Html$div,
-						_List_Nil,
-						_List_fromArray(
-							[
-								elm$html$Html$text('Hello'),
-								elm$html$Html$text(model.loginUser.name)
-							])),
-						A2(
 						elm$html$Html$button,
 						_List_fromArray(
 							[
@@ -9067,18 +9053,8 @@ _Platform_export({'Main':{'init':author$project$Main$main(
 																								return A2(
 																									elm$json$Json$Decode$andThen,
 																									function (userEmail) {
-																										return A2(
-																											elm$json$Json$Decode$andThen,
-																											function (name) {
-																												return A2(
-																													elm$json$Json$Decode$andThen,
-																													function (id) {
-																														return elm$json$Json$Decode$succeed(
-																															{id: id, name: name, userEmail: userEmail, userPassword: userPassword});
-																													},
-																													A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$int));
-																											},
-																											A2(elm$json$Json$Decode$field, 'name', elm$json$Json$Decode$string));
+																										return elm$json$Json$Decode$succeed(
+																											{userEmail: userEmail, userPassword: userPassword});
 																									},
 																									A2(elm$json$Json$Decode$field, 'userEmail', elm$json$Json$Decode$string));
 																							},
