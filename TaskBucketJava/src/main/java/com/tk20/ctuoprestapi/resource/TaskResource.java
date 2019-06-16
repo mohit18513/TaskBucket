@@ -48,30 +48,44 @@ public class TaskResource {
 
 	@CrossOrigin(origins = "*")
 	@GetMapping("/{user_id}")
-	public ArrayList<Task> getTasks(@PathVariable int user_id) {
+	public ArrayList<Task> getTasksByPrivilages(@PathVariable int user_id) {
+		return getTasks(user_id, true);
+	}
 
+	@CrossOrigin(origins = "*")
+	@GetMapping("")
+	public ArrayList<Task> getTasksWithoutPrivilages() {
+		return getTasks(0, false);
+	}
+
+	ArrayList<Task> getTasks(int user_id, boolean checkPrivilages) {
 		ResultSet taskCursor = null;
 		ArrayList<Task> tasks = new ArrayList<Task>();
 		ResultSet assessorCursor = null;
 		try (Connection con = dataSource.getConnection()) {
 
-			String sql = "select * from users where id =" + user_id + " ;";
-
 			ResultSet userCursor = null;
-			String taskQuery = "select t.* as title from tasks t, users u where u.id = t.owner and u.id=" + user_id
-					+ " union select t.*  from tasks t, users u2, task_user tu where u2.id = tu.owner and tu.tasks = t.id  and u2.id="
-					+ user_id + " union select t.* from tasks t, users u3 where u3.id = t.created_by and u3.id="
-					+ user_id + ";";
-			try (Connection conn = this.connect(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-				userCursor = pstmt.executeQuery();
-				if (userCursor.next()) {
-					if (userCursor.getString("role") != null && "admin".equals(userCursor.getString("role")))
-						taskQuery = "select * from tasks order by createtime desc;";
-				} else
-					throw new UserNotFound();
-			} catch (SQLException e) {
-				System.out.println(e.getMessage());
-				throw new ApplicationException(Throwables.getStackTraceAsString(e), e.getMessage());
+			String taskQuery = "select * from tasks order by createtime desc;";
+
+			if (checkPrivilages) {
+				String sql = "select * from users where id =" + user_id + " ;";
+
+				try (Connection conn = this.connect(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+					userCursor = pstmt.executeQuery();
+					if (userCursor.next()) {
+						if (!(userCursor.getString("role") != null && "admin".equals(userCursor.getString("role"))))
+							taskQuery = "select t.* as title from tasks t, users u where u.id = t.owner and u.id="
+									+ user_id
+									+ " union select t.*  from tasks t, users u2, task_user tu where u2.id = tu.owner and tu.tasks = t.id  and u2.id="
+									+ user_id
+									+ " union select t.* from tasks t, users u3 where u3.id = t.created_by and u3.id="
+									+ user_id + ";";
+					} else
+						throw new UserNotFound();
+				} catch (SQLException e) {
+					System.out.println(e.getMessage());
+					throw new ApplicationException(Throwables.getStackTraceAsString(e), e.getMessage());
+				}
 			}
 
 			PreparedStatement pstmt = con.prepareStatement(taskQuery);
@@ -121,6 +135,7 @@ public class TaskResource {
 			}
 		}
 		return tasks;
+
 	}
 
 	@CrossOrigin(origins = "*")
