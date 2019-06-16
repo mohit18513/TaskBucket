@@ -85,8 +85,6 @@ type alias User =
 type alias LoginUser =
   { userEmail : String
   , userPassword : String
-  , id : int
-  , name : String
   }
 
 type alias ID =
@@ -188,8 +186,6 @@ emptyLoginUser: LoginUser
 emptyLoginUser =
   { userEmail = ""
   , userPassword = ""
-  , id = 0
-  , name = ""
   }
 
 
@@ -794,7 +790,6 @@ view model =
     h1 [class "headerStyle"] [ text "Task bucket" ]
     , button [ onClick CreateTask, class "btn-secondary" ] [text "Create Task"]
     , button [ onClick ShowFilterPanel, class "btn-secondary" ] [text "Filter Tasks"]
-    , div [] [ text "Hello", text model.loginUser.name]
     , button [ onClick LogOut ] [text "LogOut"]
     ]
     ,div [class "panel"]
@@ -955,7 +950,7 @@ renderFilterView model =
 createTaskRequest : Task -> Cmd Msg
 createTaskRequest task =
     Http.post
-        { url = "https://reportstesting1.tk20.com/taskbucketapi/task-bucket-api/tasks"
+        { url = "http://172.15.3.11:9999/task-bucket-api/tasks"
         , body = Http.jsonBody (newTaskEncoder task)
         , expect = Http.expectJson TaskCreated taskDecoder
         --, timeout = Nothing
@@ -968,7 +963,7 @@ updateTaskRequest task =
       _ = Debug.log "task in updateTaskRequest ===" task
     in
       Http.post
-        { url = "https://reportstesting1.tk20.com/taskbucketapi/task-bucket-api/tasks/"++ String.fromInt(task.taskId)
+        { url = "http://172.15.3.11:9999/task-bucket-api/tasks/"++ String.fromInt(task.taskId)
         , body = Http.jsonBody (newTaskEncoder task)
         , expect = Http.expectJson TaskUpdated taskDecoder
         --, timeout = Nothing
@@ -978,7 +973,7 @@ updateTaskRequest task =
 getTasksRequest : Cmd Msg
 getTasksRequest =
   Http.get
-      { url = "https://reportstesting1.tk20.com/taskbucketapi/task-bucket-api/tasks"
+      { url = "http://172.15.3.11:9999/task-bucket-api/tasks"
       , expect = Http.expectJson TasksFetched taskListDecoder
       --, timeout = Nothing
       --, withCredentials = False
@@ -1054,7 +1049,7 @@ defaultComment  user task =
 createCommentRequest : User -> Task -> Comment -> Cmd Msg
 createCommentRequest user task comment =
    Http.post
-       { url = "https://reportstesting1.tk20.com/taskbucketapi/task-bucket-api/tasks/"++ String.fromInt(task.taskId) ++"/comments"
+       { url = "http://172.15.3.11:9999/task-bucket-api/tasks/"++ String.fromInt(task.taskId) ++"/comments"
        , body = Http.jsonBody (createCommentEncoder user task comment)
        , expect = Http.expectJson CommentCreated commentDecoder
        }
@@ -1080,14 +1075,14 @@ getCommentsRequest : Int -> Cmd Msg
 getCommentsRequest taskId =
  Http.get
      {
-     url = "https://reportstesting1.tk20.com/taskbucketapi/task-bucket-api/tasks/" ++ String.fromInt(taskId) ++"/comments"
+     url = "http://172.15.3.11:9999/task-bucket-api/tasks/" ++ String.fromInt(taskId) ++"/comments"
      , expect = Http.expectJson CommentsFetched commentListDecoder
      }
 
 deleteTaskRequest : Task -> Cmd Msg
 deleteTaskRequest task =
     Http.post
-        { url = "https://reportstesting1.tk20.com/taskbucketapi/task-bucket-api/tasks/delete"
+        { url = "http://172.15.3.11:9999/task-bucket-api/tasks/delete"
         , body = Http.jsonBody (taskEncoder task)
         , expect = Http.expectJson TaskDeleted deleteMessageDecoder
         --, timeout = Nothing
@@ -1124,14 +1119,12 @@ logInUserEncoder loginUser =
     JE.object
         [ ( "email", JE.string loginUser.userEmail )
         , ( "pwd", JE.string loginUser.userPassword )
-        , ( "id", JE.int loginUser.id )
-        , ( "name", JE.string loginUser.name )
         ]
 
 logInUserRequest : LoginUser -> Cmd Msg
 logInUserRequest loginUser =
     Http.post
-        { url = "https://reportstesting1.tk20.com/taskbucketapi/task-bucket-api/login"
+        { url = "http://172.15.3.11:9999/task-bucket-api/login"
         , body = Http.jsonBody (logInUserEncoder loginUser)
         , expect = Http.expectJson UserLoggedIn userDecoder
         --, timeout = Nothing
@@ -1141,7 +1134,7 @@ logInUserRequest loginUser =
 getUsersRequest : Cmd Msg
 getUsersRequest =
  Http.get
-     { url = "https://reportstesting1.tk20.com/taskbucketapi/task-bucket-api/users"
+     { url = "http://172.15.3.11:9999/task-bucket-api/users"
      , expect = Http.expectJson UsersFetched userListDecoder
      }
 
