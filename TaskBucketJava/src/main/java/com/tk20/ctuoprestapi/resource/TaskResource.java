@@ -11,13 +11,6 @@ import java.util.List;
 
 import javax.sql.DataSource;
 
-import main.java.com.ExceptionHandlers.ApplicationException;
-import main.java.com.ExceptionHandlers.InvalidMethodRequestException;
-import main.java.com.tk20.Entities.Contributor;
-import main.java.com.tk20.Entities.Task;
-import main.java.com.tk20.services.Logger;
-import main.java.com.tk20.services.SendEmail;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -32,6 +25,16 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.google.common.base.Throwables;
 
+import main.java.com.ExceptionHandlers.ApplicationException;
+import main.java.com.ExceptionHandlers.BadPasswordError;
+import main.java.com.ExceptionHandlers.InvalidMethodRequestException;
+import main.java.com.ExceptionHandlers.UserNotFound;
+import main.java.com.tk20.Entities.Contributor;
+import main.java.com.tk20.Entities.Task;
+import main.java.com.tk20.Entities.User;
+import main.java.com.tk20.services.Logger;
+import main.java.com.tk20.services.SendEmail;
+
 @RestController
 @RequestMapping(path = "/task-bucket-api/tasks")
 public class TaskResource {
@@ -44,14 +47,47 @@ public class TaskResource {
 	DataSource dataSource = null;
 
 	@CrossOrigin(origins = "*")
-	@GetMapping("")
-	public ArrayList<Task> getTasks() {
+	@GetMapping("/{user_id}")
+	public ArrayList<Task> getTasksByPrivilages(@PathVariable int user_id) {
+		return getTasks(user_id, true);
+	}
 
+	@CrossOrigin(origins = "*")
+	@GetMapping("")
+	public ArrayList<Task> getTasksWithoutPrivilages() {
+		return getTasks(0, false);
+	}
+
+	ArrayList<Task> getTasks(int user_id, boolean checkPrivilages) {
 		ResultSet taskCursor = null;
 		ArrayList<Task> tasks = new ArrayList<Task>();
 		ResultSet assessorCursor = null;
 		try (Connection con = dataSource.getConnection()) {
+
+			ResultSet userCursor = null;
 			String taskQuery = "select * from tasks order by createtime desc;";
+
+			if (checkPrivilages) {
+				String sql = "select * from users where id =" + user_id + " ;";
+
+				try (Connection conn = this.connect(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+					userCursor = pstmt.executeQuery();
+					if (userCursor.next()) {
+						if (!(userCursor.getString("role") != null && "admin".equals(userCursor.getString("role"))))
+							taskQuery = "select t.* as title from tasks t, users u where u.id = t.owner and u.id="
+									+ user_id
+									+ " union select t.*  from tasks t, users u2, task_user tu where u2.id = tu.owner and tu.tasks = t.id  and u2.id="
+									+ user_id
+									+ " union select t.* from tasks t, users u3 where u3.id = t.created_by and u3.id="
+									+ user_id + ";";
+					} else
+						throw new UserNotFound();
+				} catch (SQLException e) {
+					System.out.println(e.getMessage());
+					throw new ApplicationException(Throwables.getStackTraceAsString(e), e.getMessage());
+				}
+			}
+
 			PreparedStatement pstmt = con.prepareStatement(taskQuery);
 			System.out.println("Get Query Created..");
 			taskCursor = pstmt.executeQuery();
@@ -69,19 +105,15 @@ public class TaskResource {
 				task.setCreated_by(taskCursor.getInt("created_by"));
 				task.setOwner(taskCursor.getInt("owner"));
 				task.setStatus(taskCursor.getInt("status"));
-				task.setLast_commented_on(taskCursor
-						.getTimestamp("last_commented_on"));
+				task.setLast_commented_on(taskCursor.getTimestamp("last_commented_on"));
 				task.setCreatetime(taskCursor.getTimestamp("createtime"));
 
-				String contibutorQuery = "select distinct owner from task_user where tasks = "
-						+ task.getId() + ";";
-				contibutorCursor = con.prepareStatement(contibutorQuery)
-						.executeQuery();
+				String contibutorQuery = "select distinct owner from task_user where tasks = " + task.getId() + ";";
+				contibutorCursor = con.prepareStatement(contibutorQuery).executeQuery();
 				Contributor contributor;
 				while (contibutorCursor.next()) {
 					contributor = new Contributor();
-					contributor
-							.setContributor(contibutorCursor.getInt("owner"));
+					contributor.setContributor(contibutorCursor.getInt("owner"));
 					contributorList.add(contributor);
 				}
 				task.setContributorList(contributorList);
@@ -103,6 +135,7 @@ public class TaskResource {
 			}
 		}
 		return tasks;
+
 	}
 
 	@CrossOrigin(origins = "*")
@@ -110,21 +143,14 @@ public class TaskResource {
 	public Task createTasks(@RequestBody Task task) {
 
 		String sql = "INSERT INTO tasks (title , description, due_date, created_by, owner , status,createtime ) values('"
-				+ task.getTitle().replace("'", "\'")
-				+ "','"
-				+ task.getDescription().replace("'", "\'")
-				+ "','"
-				+ task.getDue_date()
-				+ "',"
-				+ task.getCreated_by()
-				+ ","
-				+ task.getOwner() + "," + task.getStatus() + ",now())";
+				+ task.getTitle().replace("'", "\'") + "','" + task.getDescription().replace("'", "\'") + "','"
+				+ task.getDue_date() + "'," + task.getCreated_by() + "," + task.getOwner() + "," + task.getStatus()
+				+ ",now())";
 		ResultSet taskCursor = null;
 		PreparedStatement pstmt2 = null;
 		ResultSet ownerAndContrinutorCursor = null;
 		PreparedStatement pstmt3 = null;
-		try (Connection conn = this.connect();
-				Statement pstmt = conn.createStatement()) {
+		try (Connection conn = this.connect(); Statement pstmt = conn.createStatement()) {
 			pstmt.execute(sql, Statement.RETURN_GENERATED_KEYS);
 			int id = 0;
 			try (ResultSet rs = pstmt.getGeneratedKeys()) {
@@ -134,8 +160,7 @@ public class TaskResource {
 				}
 			}
 			List<Contributor> contributorList = null;
-			if (task.getContributorList() != null
-					&& task.getContributorList().size() != 0) {
+			if (task.getContributorList() != null && task.getContributorList().size() != 0) {
 				String insertSQL = "INSERT INTO task_user (owner, tasks, createtime ) VALUES (?, ?, now())";
 				try {
 					pstmt2 = conn.prepareStatement(insertSQL);
@@ -166,8 +191,7 @@ public class TaskResource {
 				task.setCreated_by(taskCursor.getInt("created_by"));
 				task.setOwner(taskCursor.getInt("owner"));
 				task.setStatus(taskCursor.getInt("status"));
-				task.setLast_commented_on(taskCursor
-						.getTimestamp("last_commented_on"));
+				task.setLast_commented_on(taskCursor.getTimestamp("last_commented_on"));
 				task.setCreatetime(taskCursor.getTimestamp("createtime"));
 				task.setContributorList(contributorList);
 			}
@@ -179,8 +203,7 @@ public class TaskResource {
 					+ " union select distinct u2.email as email from tasks t, users u2, task_user tu where u2.id = tu.owner and tu.tasks = t.id  and t.id="
 					+ task.getId() + ";";
 			HashSet<String> emailSet = new HashSet<String>();
-			String emailBody = "The description for the task goes as follows: \n\n"
-					+ task.getDescription();
+			String emailBody = "The description for the task goes as follows: \n\n" + task.getDescription();
 			pstmt3 = conn.prepareStatement(ownerAndContrinutorQuery);
 			ownerAndContrinutorCursor = pstmt3.executeQuery();
 			while (ownerAndContrinutorCursor.next()) {
@@ -192,13 +215,11 @@ public class TaskResource {
 
 			if (!emailSet.isEmpty())
 				SendEmail.send(emailBody, emailSet, "support@taskbucket.in",
-						"A new task " + task.getTitle()
-								+ " is assigned to you.");
+						"A new task " + task.getTitle() + " is assigned to you.");
 
 		} catch (SQLException e) {
 			System.out.println(e.getMessage());
-			throw new ApplicationException(Throwables.getStackTraceAsString(e),
-					e.getMessage());
+			throw new ApplicationException(Throwables.getStackTraceAsString(e), e.getMessage());
 		} finally {
 
 		}
@@ -214,8 +235,7 @@ public class TaskResource {
 		PreparedStatement pstmt3 = null;
 		PreparedStatement pstmt2 = null;
 		ResultSet ownerAndContrinutorCursor = null;
-		try (Connection conn = this.connect();
-				PreparedStatement pstmt = conn.prepareStatement(sql)) {
+		try (Connection conn = this.connect(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
 			pstmt.setString(1, task.getTitle());
 			pstmt.setString(2, task.getDescription());
 			pstmt.setTimestamp(3, task.getDue_date());
@@ -226,8 +246,7 @@ public class TaskResource {
 			if (pstmt.executeUpdate() == 0)
 				throw new InvalidMethodRequestException();
 
-			if (task.getContributorList() != null
-					&& task.getContributorList().size() != 0) {
+			if (task.getContributorList() != null && task.getContributorList().size() != 0) {
 				String deleteSQL = "DELETE FROM task_user WHERE tasks = ?;";
 				pstmt2 = conn.prepareStatement(deleteSQL);
 				pstmt2.setInt(1, task.getId());
@@ -252,11 +271,10 @@ public class TaskResource {
 					+ task_id
 					+ " union select distinct u2.email as email, t.title as title  from tasks t, users u2, task_user tu where u2.id = tu.owner and tu.tasks = t.id  and t.id="
 					+ task_id
-					+ "union select distinct u3.email as email, t.title as title from tasks t, users u3 where u3.id = t.created_by and t.id="
+					+ " union select distinct u3.email as email, t.title as title from tasks t, users u3 where u3.id = t.created_by and t.id="
 					+ task_id + ";";
 			HashSet<String> emailSet = new HashSet<String>();
-			String emailBody = "The description for the task goes as follows:\n\n "
-					+ task.getDescription();
+			String emailBody = "The description for the task goes as follows:\n\n " + task.getDescription();
 			pstmt3 = conn.prepareStatement(ownerAndContrinutorQuery);
 			ownerAndContrinutorCursor = pstmt3.executeQuery();
 			while (ownerAndContrinutorCursor.next()) {
@@ -272,8 +290,7 @@ public class TaskResource {
 
 		} catch (SQLException e) {
 			System.out.println(e.getMessage());
-			throw new ApplicationException(Throwables.getStackTraceAsString(e),
-					e.getMessage());
+			throw new ApplicationException(Throwables.getStackTraceAsString(e), e.getMessage());
 		}
 		return task;
 	}
@@ -287,8 +304,7 @@ public class TaskResource {
 		String deleteComments = "DELETE FROM comments WHERE task_id = ?;";
 		PreparedStatement pstmt2 = null;
 		PreparedStatement pstmt3 = null;
-		try (Connection conn = this.connect();
-				PreparedStatement pstmt = conn.prepareStatement(deleteSQL)) {
+		try (Connection conn = this.connect(); PreparedStatement pstmt = conn.prepareStatement(deleteSQL)) {
 			pstmt.setInt(1, task.getId());
 			pstmt.executeUpdate();
 
@@ -314,8 +330,7 @@ public class TaskResource {
 			conn = dataSource.getConnection();
 		} catch (SQLException e) {
 			System.out.println(e.getMessage());
-			throw new ApplicationException(Throwables.getStackTraceAsString(e),
-					e.getMessage());
+			throw new ApplicationException(Throwables.getStackTraceAsString(e), e.getMessage());
 		}
 		return conn;
 	}
